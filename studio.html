@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="utf-8">
@@ -211,8 +210,13 @@
     </div>
     <button class="btn" id="xPng">Télécharger PNG</button>
     <button class="btn gris" id="dTout">Télécharger toutes les slides (ZIP)</button>
-    <button class="btn gris" id="xDrive" disabled title="Connexion via Claude requise">Envoyer vers Google Drive</button>
-    <span class="hint">Envoi Drive : connexion via Claude requise.</span>
+    <button class="btn gris" id="xDrive">Envoyer vers Google Drive</button>
+  </div>
+  <div class="bar" id="xDriveBar" style="border-top:1px solid #333;padding-top:8px;gap:8px;flex-wrap:wrap">
+    <span class="hint" id="xDriveHint" style="flex:0 0 auto"></span>
+    <label style="font-size:12px;white-space:nowrap;flex:0 0 auto">Client ID Google OAuth :</label>
+    <input id="xClientId" type="text" placeholder="xxxx.apps.googleusercontent.com" style="flex:1;min-width:260px;font-size:12px;padding:4px 8px">
+    <button class="btn gris" id="xSaveClientId" style="font-size:12px;flex:0 0 auto">Enregistrer</button>
   </div>
   <div class="colD" style="flex:1;min-height:0"><canvas id="xPrev"></canvas><div class="hint" id="xInfo"></div></div>
 </section>
@@ -307,7 +311,7 @@ const words = t => t.split(/\s+/).filter(Boolean);
 const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
 const lineWidth = ln => ctx.measureText(ln.join(' ')).width;
 const BR_T = '\u0000BR';
-// Titre : après un « : », la suite passe à la ligne
+// Titre : après un « : », la suite passe à la ligne
 function wordsT(t) { const out = []; words(t).forEach(w => { out.push(w); if (/:$/.test(w)) out.push(BR_T); }); return out; }
 function wrapWords(ws, maxW) {
   const lines = []; let cur = [];
@@ -418,7 +422,7 @@ function dessiner(el, tpl, fmtKey, c) {
   const autoOK = fam !== 'car' || n === 1 || n === N;
   const sorcOn = c.sorc === 'oui' || (!!p.sorc && c.sorc !== 'non' && autoOK);
   const barreY = H - (story ? 270 : 50) - (story ? 0 : 60);
-  let pileFin = null; // bas du texte empilé, pour placer « Swipe → » juste dessous
+  let pileFin = null; // bas du texte empilé, pour placer « Swipe → » juste dessous
   let geo = null;
   if (sorcOn) {
     const pid = c.pose === 'auto' || !c.pose ? poseAuto(c.theme) : c.pose;
@@ -562,12 +566,12 @@ function dessiner(el, tpl, fmtKey, c) {
       const x0 = cornerR ? 80 : W / 2 - total / 2;
       for (let i = 1; i <= N; i++) {
         ctx.fillStyle = i === n ? cl.lime : '#666';
-        ctx.beginPath(); ctx.arc(x0 + (i - 0.5) * gap, barreY + 10, r, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x0 + (i - 0.5) * gap, barY + 10, r, 0, Math.PI * 2); ctx.fill();
       }
     }
     const cornerN = sorcOn && pos === 'droite';
     ctx.textAlign = cornerN ? 'left' : 'right'; ctx.font = fontOf(22, 300, 'corps'); ctx.globalAlpha = 0.6;
-    ctx.fillText(`${n}/${N}`, cornerN ? 80 : W - 80, barreY + 26); ctx.globalAlpha = 1; ctx.textAlign = 'left';
+    ctx.fillText(`${n}/${N}`, cornerN ? 80 : W - 80, barY + 26); ctx.globalAlpha = 1; ctx.textAlign = 'left';
   }
 
   // URL
@@ -1002,6 +1006,134 @@ $('dTout').addEventListener('click', async () => {
   telechargerBlob(faireZip(fichiers), slugCar(car) + '.zip');
 });
 
+// ---------- Google Drive OAuth PKCE ----------
+const GDRIVE_KEY = 'studio-gdrive-client-id';
+const GDRIVE_VERIFIER_KEY = 'studio-gdrive-pkce-verifier';
+const GDRIVE_PENDING_KEY = 'studio-gdrive-pending';
+
+function gdClientId() { return localStorage.getItem(GDRIVE_KEY) || ''; }
+
+function gdHint(msg, err) {
+  const el = $('xDriveHint');
+  if (el) { el.textContent = msg; el.style.color = err ? '#e05' : ''; }
+}
+
+function gdInitUI() {
+  const id = gdClientId();
+  const inp = $('xClientId');
+  if (inp) inp.value = id;
+  gdHint(id ? 'Client ID enregistré. Prêt à envoyer.' : 'Renseigne ton Client ID Google OAuth pour activer l\'envoi.');
+}
+
+$('xSaveClientId').addEventListener('click', () => {
+  const val = $('xClientId').value.trim();
+  if (!val) { gdHint('Client ID vide.', true); return; }
+  localStorage.setItem(GDRIVE_KEY, val);
+  gdHint('Client ID enregistré.');
+});
+
+async function pkceChallenge(verifier) {
+  const enc = new TextEncoder().encode(verifier);
+  const hash = await crypto.subtle.digest('SHA-256', enc);
+  return btoa(String.fromCharCode(...new Uint8Array(hash))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function pkceVerifier() {
+  const arr = new Uint8Array(64);
+  crypto.getRandomValues(arr);
+  return btoa(String.fromCharCode(...arr)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+async function lancerOAuthDrive(blob, nom) {
+  const clientId = gdClientId();
+  if (!clientId) { gdHint('Renseigne et enregistre ton Client ID Google OAuth.', true); return; }
+  const verifier = pkceVerifier();
+  const challenge = await pkceChallenge(verifier);
+  const redirectUri = location.origin + location.pathname;
+  sessionStorage.setItem(GDRIVE_VERIFIER_KEY, verifier);
+  // Serialise le blob en base64 pour le retrouver après le redirect
+  const reader = new FileReader();
+  reader.onload = () => {
+    sessionStorage.setItem(GDRIVE_PENDING_KEY, JSON.stringify({ dataUrl: reader.result, nom }));
+    const params = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      response_type: 'code',
+      scope: 'https://www.googleapis.com/auth/drive.file',
+      code_challenge: challenge,
+      code_challenge_method: 'S256',
+      access_type: 'online',
+    });
+    location.href = 'https://accounts.google.com/o/oauth2/v2/auth?' + params.toString();
+  };
+  reader.readAsDataURL(blob);
+}
+
+async function echangerCodeDrive(code) {
+  const clientId = gdClientId();
+  const verifier = sessionStorage.getItem(GDRIVE_VERIFIER_KEY);
+  const redirectUri = location.origin + location.pathname;
+  if (!clientId || !verifier) return null;
+  const resp = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ code, client_id: clientId, redirect_uri: redirectUri, grant_type: 'authorization_code', code_verifier: verifier }),
+  });
+  if (!resp.ok) return null;
+  return (await resp.json()).access_token;
+}
+
+async function uploadDrive(token, blob, nom) {
+  const meta = JSON.stringify({ name: nom, mimeType: 'image/png' });
+  const body = new FormData();
+  body.append('metadata', new Blob([meta], { type: 'application/json' }));
+  body.append('file', blob, nom);
+  const resp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + token },
+    body,
+  });
+  return resp.ok ? await resp.json() : null;
+}
+
+// Reprise après redirect OAuth
+(async function reprendreOAuth() {
+  const q = new URLSearchParams(location.search);
+  if (!q.has('code') && !q.has('error')) return;
+  // Nettoie l'URL pour éviter une double exécution
+  history.replaceState(null, '', location.pathname);
+  if (q.has('error')) { gdHint('Autorisation refusée : ' + q.get('error'), true); return; }
+  const code = q.get('code');
+  const pending = sessionStorage.getItem(GDRIVE_PENDING_KEY);
+  sessionStorage.removeItem(GDRIVE_VERIFIER_KEY);
+  sessionStorage.removeItem(GDRIVE_PENDING_KEY);
+  if (!pending) { gdHint('Données d\'export introuvables. Réessaie.', true); return; }
+  gdHint('Authentification réussie, envoi en cours…');
+  const { dataUrl, nom } = JSON.parse(pending);
+  const token = await echangerCodeDrive(code);
+  if (!token) { gdHint('Échange de token échoué. Vérifie le Client ID et les origines autorisées.', true); return; }
+  const resp = await fetch(dataUrl);
+  const blob = await resp.blob();
+  const fichier = await uploadDrive(token, blob, nom);
+  if (fichier) {
+    gdHint('✓ Envoyé dans Google Drive : ' + fichier.name);
+  } else {
+    gdHint('Erreur lors de l\'upload. Réessaie.', true);
+  }
+})();
+
+$('xDrive').addEventListener('click', async () => {
+  if (!gdClientId()) { gdHint('Renseigne et enregistre ton Client ID Google OAuth.', true); return; }
+  const out = document.createElement('canvas');
+  const info = dessinerExport(out);
+  if (!info) { gdHint('Aucun visuel à exporter.', true); return; }
+  gdHint('Préparation de l\'export…');
+  out.toBlob(blob => {
+    if (!blob) { gdHint(MSG_EXPORT, true); return; }
+    lancerOAuthDrive(blob, info.nom + '.png');
+  }, 'image/png');
+});
+
 // ---------- Rendu global et navigation ----------
 function rendreTout() {
   try { rendreTout2(); } catch (e) { console.error('Rendu :', e); }
@@ -1061,6 +1193,7 @@ $('mPrev').style.display = 'block';
 })();
 
 if (!document.body.classList.contains('export')) {
+  gdInitUI();
   rendreTout();
   if (document.fonts) {
     Promise.all([
