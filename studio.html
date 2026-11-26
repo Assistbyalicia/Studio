@@ -127,6 +127,7 @@
     <label>Format<select id="mFormat">
       <option value="li-post">LinkedIn - post 1080 x 1080</option>
       <option value="ig-post">Instagram - post 1080 x 1440</option>
+      <option value="ig-45">Instagram - 4:5 portrait 1080 x 1350</option>
       <option value="story">Story 1080 x 1920</option>
       <option value="li-car">LinkedIn - carrousel 1080 x 1080</option>
       <option value="ig-car">Instagram - carrousel 1080 x 1440</option>
@@ -261,11 +262,24 @@ const THEME_FOND = {
   "confidence":"Fonds/fond-confidence.png",
   "mindset":"Fonds/fond-mindset.png"
 };
+const THEME_FOND_IG = {
+  "offre":"Fonds-instagram/fond-offre-4x5.png",
+  "resultat":"Fonds-instagram/fond-resultat-4x5.png",
+  "temps":"Fonds-instagram/fond-temps-4x5.png",
+  "invitation":"Fonds-instagram/fond-invitation-4x5.png",
+  "question":"Fonds-instagram/fond-question-4x5.png",
+  "apprentissage":"Fonds-instagram/fond-apprentissage-4x5.png",
+  "methode":"Fonds-instagram/fond-methode-4x5.png",
+  "defaut":"Fonds-instagram/fond-defaut-4x5.png",
+  "confidence":"Fonds-instagram/fond-confidence-4x5.png",
+  "mindset":"Fonds-instagram/fond-mindset-4x5.png"
+};
 const FORMATS = {
   "li-post":{w:1080,h:1080,fam:"post",story:false,li:true,car:false,label:"LinkedIn post"},
   "li-car": {w:1080,h:1080,fam:"car", story:false,li:true,car:true,label:"LinkedIn carrousel"},
   "ig-post":{w:1080,h:1440,fam:"post",story:false,li:false,car:false,label:"Instagram post"},
   "ig-car": {w:1080,h:1440,fam:"car", story:false,li:false,car:true,label:"Instagram carrousel"},
+  "ig-45":  {w:1080,h:1350,fam:"post",story:false,li:false,car:false,label:"Instagram 4:5"},
   "story":  {w:1080,h:1920,fam:"story",story:true,li:false,car:false,label:"Story"}
 };
 const BUT_LABEL = {tofu:"TOFU · attirer", mofu:"MOFU · confiance", bofu:"BOFU · vendre"};
@@ -321,6 +335,12 @@ function fondImg(theme) {
   const src = THEME_FOND[theme]; if (!src) return null;
   if (!fondImgs[src]) { const im = new Image(); im.onload = rendreTout; im.src = src; fondImgs[src] = im; }
   return fondImgs[src];
+}
+const fondImgsIg = {};
+function fondImgIg(theme) {
+  const src = THEME_FOND_IG[theme]; if (!src) return null;
+  if (!fondImgsIg[src]) { const im = new Image(); im.onload = rendreTout; im.src = src; fondImgsIg[src] = im; }
+  return fondImgsIg[src];
 }
 function poseAuto(theme) {
   const s = S.sorcieres.find(x => x.theme === theme);
@@ -440,7 +460,7 @@ function dessiner(el, tpl, fmtKey, c) {
   // Fond illustré (uniquement quand pas de photo plein écran)
   if (!p.photoT && !p.photoL && !(ph && ph.complete && ph.naturalWidth)) {
     const fondTh = c.fondIllustre === 'aucun' ? null : (c.fondIllustre === 'auto' || !c.fondIllustre) ? c.theme : c.fondIllustre;
-    const fi = fondTh ? fondImg(fondTh) : null;
+    const fi = fondTh ? (fmtKey === 'ig-45' ? fondImgIg(fondTh) : fondImg(fondTh)) : null;
     if (fi && fi.complete && fi.naturalWidth) ctx.drawImage(fi, 0, 0, W, H);
   }
 
@@ -786,6 +806,7 @@ const GALERIE_TEST = {titre:"Ton titre ici", accent:"titre", num:"1", corps:"Une
 const GALERIE_SECTIONS = [
   {fmt:'li-post', titre:'LinkedIn · Posts'},
   {fmt:'ig-post', titre:'Instagram · Posts'},
+  {fmt:'ig-45', titre:'Instagram · 4:5 Portrait'},
   {fmt:'story', titre:'Stories'},
   {fmt:'li-car', titre:'Carrousels LinkedIn'},
   {fmt:'ig-car', titre:'Carrousels Instagram'}
