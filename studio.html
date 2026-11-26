@@ -153,7 +153,7 @@
         <label>Sorcière</label><select data-test="sorc"><option value="auto">Auto</option><option value="oui">Oui</option><option value="non">Non</option></select>
         <label>Position</label><select data-test="pos"><option value="auto">Auto</option><option value="droite">Droite</option><option value="gauche">Gauche</option><option value="centre">Centre</option></select>
         <label>Fond</label><select data-test="fond"><option value="noir">Noir</option><option value="marine">Bleu marine</option><option value="degrade">Dégradé</option></select>
-        <label>Fond illustré</label><select data-test="fondIllustre"><option value="auto">Auto (selon le thème)</option><option value="aucun">Aucun</option><option value="action">Action (flèches)</option><option value="automatisation">Automatisation (circuits)</option><option value="communication">Communication (bulles)</option><option value="organisation">Organisation (engrenages)</option></select>
+        <label>Fond illustré</label><select data-test="fondIllustre"><option value="auto">Auto (selon le thème)</option><option value="aucun">Aucun</option><option value="action">Action (flèches)</option><option value="automatisation">Automatisation (circuits)</option><option value="communication">Communication (bulles)</option><option value="organisation">Organisation (engrenages)</option><option value="offre">Offre (cadeaux)</option><option value="resultat">Résultat (graphiques)</option><option value="temps">Temps (sabliers)</option><option value="invitation">Invitation (flèches)</option><option value="question">Question (bulles ?)</option><option value="apprentissage">Apprentissage (livres)</option><option value="methode">Méthode (étapes)</option><option value="defaut">Défaut (engrenages)</option><option value="confidence">Confidence (bulles)</option><option value="mindset">Mindset (spirales)</option></select>
         <label>Photo de fond</label><div id="mPhotoG"></div>
         <label><input type="checkbox" data-test="dots" style="width:auto"> Points de progression</label>
       </div>
@@ -173,7 +173,7 @@
       <div class="colG">
         <label>Nom</label><input id="cNom">
         <label>Thème (pose de la sorcière)</label><select id="cTheme"></select>
-        <label>Fond illustré</label><select id="cFondIllustre"><option value="auto">Auto (selon le thème)</option><option value="aucun">Aucun</option><option value="action">Action (flèches)</option><option value="automatisation">Automatisation (circuits)</option><option value="communication">Communication (bulles)</option><option value="organisation">Organisation (engrenages)</option></select>
+        <label>Fond illustré</label><select id="cFondIllustre"><option value="auto">Auto (selon le thème)</option><option value="aucun">Aucun</option><option value="action">Action (flèches)</option><option value="automatisation">Automatisation (circuits)</option><option value="communication">Communication (bulles)</option><option value="organisation">Organisation (engrenages)</option><option value="offre">Offre (cadeaux)</option><option value="resultat">Résultat (graphiques)</option><option value="temps">Temps (sabliers)</option><option value="invitation">Invitation (flèches)</option><option value="question">Question (bulles ?)</option><option value="apprentissage">Apprentissage (livres)</option><option value="methode">Méthode (étapes)</option><option value="defaut">Défaut (engrenages)</option><option value="confidence">Confidence (bulles)</option><option value="mindset">Mindset (spirales)</option></select>
         <label><input type="checkbox" id="cDots" style="width:auto"> Points de progression</label>
         <h3>Slides</h3>
         <div class="slides" id="cSlides"></div>
@@ -249,7 +249,17 @@ const THEME_FOND = {
   "action":"Fonds/fond-action.png",
   "automatisation":"Fonds/fond-automatisation.png",
   "communication":"Fonds/fond-communication.png",
-  "organisation":"Fonds/fond-organisation.png"
+  "organisation":"Fonds/fond-organisation.png",
+  "offre":"Fonds/fond-offre.png",
+  "resultat":"Fonds/fond-resultat.png",
+  "temps":"Fonds/fond-temps.png",
+  "invitation":"Fonds/fond-invitation.png",
+  "question":"Fonds/fond-question.png",
+  "apprentissage":"Fonds/fond-apprentissage.png",
+  "methode":"Fonds/fond-methode.png",
+  "defaut":"Fonds/fond-defaut.png",
+  "confidence":"Fonds/fond-confidence.png",
+  "mindset":"Fonds/fond-mindset.png"
 };
 const FORMATS = {
   "li-post":{w:1080,h:1080,fam:"post",story:false,li:true,car:false,label:"LinkedIn post"},
