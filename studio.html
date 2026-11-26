@@ -153,6 +153,7 @@
         <label>Sorcière</label><select data-test="sorc"><option value="auto">Auto</option><option value="oui">Oui</option><option value="non">Non</option></select>
         <label>Position</label><select data-test="pos"><option value="auto">Auto</option><option value="droite">Droite</option><option value="gauche">Gauche</option><option value="centre">Centre</option></select>
         <label>Fond</label><select data-test="fond"><option value="noir">Noir</option><option value="marine">Bleu marine</option><option value="degrade">Dégradé</option></select>
+        <label>Fond illustré</label><select data-test="fondIllustre"><option value="auto">Auto (selon le thème)</option><option value="aucun">Aucun</option><option value="action">Action (flèches)</option><option value="automatisation">Automatisation (circuits)</option><option value="communication">Communication (bulles)</option><option value="organisation">Organisation (engrenages)</option></select>
         <label>Photo de fond</label><div id="mPhotoG"></div>
         <label><input type="checkbox" data-test="dots" style="width:auto"> Points de progression</label>
       </div>
@@ -172,6 +173,7 @@
       <div class="colG">
         <label>Nom</label><input id="cNom">
         <label>Thème (pose de la sorcière)</label><select id="cTheme"></select>
+        <label>Fond illustré</label><select id="cFondIllustre"><option value="auto">Auto (selon le thème)</option><option value="aucun">Aucun</option><option value="action">Action (flèches)</option><option value="automatisation">Automatisation (circuits)</option><option value="communication">Communication (bulles)</option><option value="organisation">Organisation (engrenages)</option></select>
         <label><input type="checkbox" id="cDots" style="width:auto"> Points de progression</label>
         <h3>Slides</h3>
         <div class="slides" id="cSlides"></div>
@@ -243,6 +245,12 @@ const THEME_POSE = {
   "invitation":"pointant-direction", "confidence":"chuchotant-secret", "resultat":"sautant-joie",
   "magie":"sort-puissant", "offre":"victoire-confettis", "defaut":"debout-baguette"
 };
+const THEME_FOND = {
+  "action":"Fonds/fond-action.png",
+  "automatisation":"Fonds/fond-automatisation.png",
+  "communication":"Fonds/fond-communication.png",
+  "organisation":"Fonds/fond-organisation.png"
+};
 const FORMATS = {
   "li-post":{w:1080,h:1080,fam:"post",story:false,li:true,car:false,label:"LinkedIn post"},
   "li-car": {w:1080,h:1080,fam:"car", story:false,li:true,car:true,label:"LinkedIn carrousel"},
@@ -260,7 +268,7 @@ const DEFAUT = {
   charte: clone(window.CHARTE),
   carrousels: clone(window.CARROUSELS),
   photoMeta: {},
-  test: {titre:"Tes relances, tu les notes où ?", accent:"relances", num:"1", corps:"Une seule liste\nUne date pour chacune", cle:"", cta:"Réserve ton appel gratuit", url:"", n:1, N:5, theme:"organisation", pose:"auto", sorc:"auto", pos:"auto", fond:"noir", photo:"", dots:true},
+  test: {titre:"Tes relances, tu les notes où ?", accent:"relances", num:"1", corps:"Une seule liste\nUne date pour chacune", cle:"", cta:"Réserve ton appel gratuit", url:"", n:1, N:5, theme:"organisation", pose:"auto", sorc:"auto", pos:"auto", fond:"noir", fondIllustre:"auto", photo:"", dots:true},
   testTpl: "post-tofu-a", cSel: 0, cSlide: 0,
   sorcieres: clone(window.SORCIERES)
 };
@@ -296,6 +304,13 @@ function poseImg(id) {
   if (!s) return new Image();
   if (!imgs[s.src]) { const im = new Image(); im.onload = rendreTout; im.src = s.src; imgs[s.src] = im; }
   return imgs[s.src];
+}
+// Fonds illustrés
+const fondImgs = {};
+function fondImg(theme) {
+  const src = THEME_FOND[theme]; if (!src) return null;
+  if (!fondImgs[src]) { const im = new Image(); im.onload = rendreTout; im.src = src; fondImgs[src] = im; }
+  return fondImgs[src];
 }
 function poseAuto(theme) {
   const s = S.sorcieres.find(x => x.theme === theme);
@@ -411,6 +426,13 @@ function dessiner(el, tpl, fmtKey, c) {
   } else if (c.fond === 'degrade') {
     const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, cl.noir); g.addColorStop(1, cl.marine); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
   } else { ctx.fillStyle = c.fond === 'marine' ? cl.marine : cl.noir; ctx.fillRect(0, 0, W, H); }
+
+  // Fond illustré (uniquement quand pas de photo plein écran)
+  if (!p.photoT && !p.photoL && !(ph && ph.complete && ph.naturalWidth)) {
+    const fondTh = c.fondIllustre === 'aucun' ? null : (c.fondIllustre === 'auto' || !c.fondIllustre) ? c.theme : c.fondIllustre;
+    const fi = fondTh ? fondImg(fondTh) : null;
+    if (fi && fi.complete && fi.naturalWidth) ctx.drawImage(fi, 0, 0, W, H);
+  }
 
   const n = +c.n || 1, N = +c.N || 1;
   const barY = story ? 170 : 0;
@@ -742,7 +764,7 @@ $('sTelecharger').addEventListener('click', () => {
 // ---------- Onglet Mes modèles ----------
 function contenuTest() {
   const t = S.test;
-  return {titre:t.titre, accent:t.accent, num:t.num, corps:t.corps, cle:t.cle, cta:t.cta, url:t.url, theme:t.theme, pose:t.pose, sorc:t.sorc, pos:t.pos, fond:t.fond, photo:t.photo, n:t.n, N:t.N, dots:t.dots};
+  return {titre:t.titre, accent:t.accent, num:t.num, corps:t.corps, cle:t.cle, cta:t.cta, url:t.url, theme:t.theme, pose:t.pose, sorc:t.sorc, pos:t.pos, fond:t.fond, fondIllustre:t.fondIllustre, photo:t.photo, n:t.n, N:t.N, dots:t.dots};
 }
 // Un modèle sans champ fmt vaut pour tous les formats de sa famille ; fmt 'li' ou 'ig' le réserve à LinkedIn ou Instagram
 function tplOk(t, fmtKey) {
@@ -851,7 +873,7 @@ const MSG_EXPORT = "Export bloqué par le navigateur (fichier ouvert depuis le d
 function carActuel() { return S.carrousels[S.cSel] || null; }
 function contenuSlide(car, i) {
   const s = car.slides[i], N = car.slides.length;
-  return {titre:s.titre, accent:s.accent, num:s.num, corps:s.corps, cta:s.cta, url:s.url, photo:s.photo, cle:'', theme:car.theme, pose:s.pose, sorc:s.sorc, pos:s.pos, fond:'noir', n:i+1, N, dots:car.dots};
+  return {titre:s.titre, accent:s.accent, num:s.num, corps:s.corps, cta:s.cta, url:s.url, photo:s.photo, cle:'', theme:car.theme, pose:s.pose, sorc:s.sorc, pos:s.pos, fond:'noir', fondIllustre:car.fondIllustre || 'auto', n:i+1, N, dots:car.dots};
 }
 function rendreCarrousels() {
   // liste des carrousels
@@ -861,10 +883,11 @@ function rendreCarrousels() {
   selectOptions($('dCar'), S.carrousels.map((c, i) => [i, c.nom]), S.cSel);
   const car = carActuel();
   if (!car) { $('cSlides').innerHTML = '<div class="vide">Aucun carrousel. Crée-en un avec la structure choisie en haut.</div>'; $('cPrev').getContext('2d').clearRect(0,0,1,1); return; }
-  $('cNom').value = car.nom; $('cTheme').value = car.theme; $('cDots').checked = !!car.dots;
+  $('cNom').value = car.nom; $('cTheme').value = car.theme; $('cFondIllustre').value = car.fondIllustre || 'auto'; $('cDots').checked = !!car.dots;
   $('cNom').onchange = () => { car.nom = $('cNom').value; save(); rendreTout(); };
   $('cNom').oninput = () => { car.nom = $('cNom').value; save(); };
   $('cTheme').onchange = () => { car.theme = $('cTheme').value; save(); rendreTout(); };
+  $('cFondIllustre').onchange = () => { car.fondIllustre = $('cFondIllustre').value; save(); rendreTout(); };
   $('cDots').onchange = () => { car.dots = $('cDots').checked; save(); rendreTout(); };
 
   // liste des slides
