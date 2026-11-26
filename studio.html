@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Studio - Assist by Alicia</title>
+<link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@700&family=Montserrat:wght@300;400;700&family=Satisfy&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:Montserrat, sans-serif; background:#262626; color:#eee; height:100vh; display:flex; flex-direction:column; }
+  header { display:flex; align-items:center; gap:6px; background:#161616; border-bottom:1px solid #333; padding:8px 14px; }
+  header .titre { font-weight:700; color:#CAFF00; margin-right:18px; font-size:14px; }
+  header button.onglet { background:transparent; color:#bbb; border:1px solid transparent; border-radius:6px; padding:7px 12px; cursor:pointer; font:inherit; font-size:13px; }
+  header button.onglet.on { color:#111; background:#CAFF00; }
+  .tab { display:none; flex:1; min-height:0; overflow:hidden; }
+  .tab.on { display:flex; flex-direction:column; }
+  .bar { display:flex; flex-wrap:wrap; gap:8px; align-items:flex-end; padding:12px 16px; border-bottom:1px solid #333; background:#1d1d1d; }
+  .bar label { font-size:11px; color:#aaa; display:flex; flex-direction:column; gap:3px; }
+  .split { flex:1; min-height:140px; display:flex; }
+  .colG { width:360px; flex:none; overflow:auto; padding:14px; background:#1d1d1d; border-right:1px solid #333; }
+  .dr { flex:1; min-width:0; display:flex; flex-direction:column; }
+  .dr .colD { flex:1; min-height:0; }
+  .colD { flex:1; min-width:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px; overflow:auto; gap:10px; }
+  .colD canvas { box-shadow:0 0 0 1px #444; margin:auto; flex:none; }
+  input, select, textarea { background:#111; color:#eee; border:1px solid #333; border-radius:6px; padding:6px 8px; font:inherit; font-size:13px; }
+  textarea { resize:vertical; min-height:52px; }
+  .colG input, .colG select, .colG textarea { width:100%; margin-bottom:4px; }
+  .colG h3 { font-size:14px; color:#CAFF00; margin:16px 0 6px; }
+  .colG label { display:block; font-size:12px; color:#bbb; margin:6px 0 2px; }
+  .btn { background:#CAFF00; color:#111; border:0; border-radius:8px; padding:8px 12px; font-weight:700; cursor:pointer; font:inherit; font-size:13px; }
+  .btn.gris { background:#333; color:#eee; }
+  .btn.corail { background:#FF4757; color:#fff; }
+  .galerie { flex:1; overflow:auto; display:flex; gap:24px; padding:14px 16px; align-items:flex-start; }
+  .grp { display:flex; flex-direction:column; gap:8px; flex:none; }
+  .grp-titre { font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:#CAFF00; font-weight:700; }
+  .thumbs { display:flex; gap:10px; align-items:flex-start; }
+  .th { background:#111; border:2px solid #333; border-radius:8px; padding:6px; cursor:pointer; color:#ccc; font:inherit; font-size:11px; text-align:left; display:flex; flex-direction:column; gap:6px; flex:none; }
+  .th.on { border-color:#CAFF00; }
+  .th:hover { border-color:#666; }
+  .th canvas { display:block; }
+  .th span { line-height:1.3; }
+  .charte-grille { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .carte { background:#161616; border:1px solid #333; border-radius:8px; padding:10px; display:flex; flex-direction:column; gap:6px; }
+  .carte img { width:100%; height:150px; object-fit:cover; border-radius:6px; background:#000; }
+  .slides { display:flex; flex-direction:column; gap:6px; margin-bottom:8px; }
+  .slide { display:flex; align-items:center; gap:6px; background:#111; border:2px solid #333; border-radius:8px; padding:6px 8px; cursor:pointer; font-size:12px; }
+  .slide.on { border-color:#CAFF00; }
+  .slide .num { color:#CAFF00; font-weight:700; width:22px; }
+  .slide .rol { flex:1; }
+  .slide button { background:#222; color:#eee; border:0; border-radius:4px; padding:2px 6px; cursor:pointer; font:inherit; }
+  .hint { font-size:11px; color:#999; line-height:1.5; }
+  .vide { color:#888; font-size:13px; padding:20px; }
+  .sec { font-size:14px; color:#CAFF00; margin:6px 0; }
+  .grille { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin:4px 0 8px; }
+  .gi { background:#111; border:2px solid #333; border-radius:6px; padding:3px; color:#ccc; font:inherit; font-size:10px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:3px; }
+  .gi.on { border-color:#CAFF00; }
+  .gi img { width:100%; height:60px; object-fit:contain; background:#000; border-radius:4px; }
+  .gi small { line-height:1.2; text-align:center; }
+  .bande { flex:none; display:flex; gap:28px; padding:10px 16px; align-items:flex-start; overflow-x:auto; border-top:1px solid #333; background:#181818; }
+  .bande .gp { display:flex; flex-direction:column; gap:6px; flex:none; }
+  .bande .ligne { display:flex; gap:8px; }
+  .bande .gi { width:96px; }
+  #export { display:none; }
+  body.export > header, body.export > .tab, body.export > .hint { display:none !important; }
+  body.export { background:#000; align-items:center; justify-content:center; }
+  body.export #export { display:block; }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="titre">Studio · Assist by Alicia</span>
+  <button class="onglet on" data-tab="galerie">Galerie</button>
+  <button class="onglet" data-tab="modeles">Paramètres</button>
+  <button class="onglet" data-tab="telecharger">Export</button>
+  <button class="onglet" data-tab="charte">Ma charte</button>
+  <button class="onglet" data-tab="photos">Mes photos</button>
+</header>
+
+<!-- ============ MA CHARTE ============ -->
+<section class="tab" id="t-charte">
+  <div class="bar"><span class="hint">Couleurs, polices et mentions appliquées à tous les visuels. Télécharge charte.js pour garder les changements dans le dossier.</span>
+    <button class="btn" id="chTelecharger">Télécharger charte.js</button>
+    <button class="btn gris" id="chReset">Revenir à la charte d'origine</button>
+  </div>
+  <div class="split">
+    <div class="colG">
+      <h3>Couleurs</h3>
+      <div id="chCouleurs"></div>
+      <h3>Polices</h3>
+      <label>Titres (League Spartan Bold)</label><input id="chTitre">
+      <label>Corps (Montserrat)</label><input id="chCorps">
+      <h3>Mentions</h3>
+      <label>Mention IA (haut droite, tous les visuels)</label><textarea id="chIA"></textarea>
+      <label>Signature LinkedIn</label><input id="chSigLi">
+      <label>Signature Instagram</label><input id="chSigIg">
+    </div>
+    <div class="colD"><div class="hint" id="chSource"></div><div id="chApercu" class="charte-grille" style="width:520px"></div></div>
+  </div>
+</section>
+
+<!-- ============ MES PHOTOS ============ -->
+<section class="tab" id="t-photos">
+  <div class="bar">
+    <label>Ajouter une photo (non sauvegardée après fermeture)<input id="pAjout" type="file" accept="image/*"></label>
+    <button class="btn gris" id="pTelecharger">Télécharger photos.js</button>
+    <span class="hint">Dossier source : photos/ (à côté de Sorcière). Lance le studio depuis AssistByAlicia pour voir les images.</span>
+  </div>
+  <div class="colD" style="align-items:stretch;justify-content:flex-start;overflow:auto">
+    <h3 class="sec">Sorcières (poses)</h3>
+    <div class="bar" style="padding:0 0 10px;border:0;background:none">
+      <label>Ajouter une pose (PNG détouré, session seulement)<input id="sAjoutFile" type="file" accept="image/png"></label>
+      <button class="btn gris" id="sTelecharger">Télécharger sorcieres.js</button>
+    </div>
+    <div class="charte-grille" id="sGrille" style="grid-template-columns:repeat(5,1fr)"></div>
+    <h3 class="sec">Photos</h3>
+    <div class="charte-grille" id="pGrille" style="grid-template-columns:repeat(4,1fr)"></div>
+  </div>
+</section>
+
+<!-- ============ GALERIE ============ -->
+<section class="tab on" id="t-galerie">
+  <div class="bar"><span class="hint">Contenu d'exemple fixe, tous formats. Clique un modèle pour l'ouvrir dans Paramètres.</span></div>
+  <div class="galerie" id="gGrille" style="flex-direction:column;align-items:stretch;gap:22px"></div>
+</section>
+
+<!-- ============ PARAMÈTRES ============ -->
+<section class="tab" id="t-modeles">
+  <div class="bar">
+    <label>Format<select id="mFormat">
+      <option value="li-post">LinkedIn - post 1080 x 1080</option>
+      <option value="ig-post">Instagram - post 1080 x 1440</option>
+      <option value="story">Story 1080 x 1920</option>
+      <option value="li-car">LinkedIn - carrousel 1080 x 1080</option>
+      <option value="ig-car">Instagram - carrousel 1080 x 1440</option>
+    </select></label>
+    <label id="mModeleL">Modèle<select id="mModele"></select></label>
+    <button class="btn" id="mTelecharger">Télécharger PNG</button>
+    <span class="hint">Contenu de test à gauche. Pour un carrousel, ses slides se règlent ici.</span>
+  </div>
+  <div id="pPost" style="flex:1;min-height:0;display:flex;flex-direction:column">
+    <div class="split">
+      <div class="colG">
+        <h3>Contenu de test</h3>
+        <label>Titre</label><textarea data-test="titre"></textarea>
+        <label>Mot à mettre en corail</label><input data-test="accent">
+        <label>Numéro géant (étape numérotée)</label><input data-test="num">
+        <label>Corps (une ligne = une puce)</label><textarea data-test="corps"></textarea>
+        <label>Mot clé Satisfy (story Connexion)</label><input data-test="cle">
+        <label>CTA</label><input data-test="cta">
+        <label>URL</label><input data-test="url">
+        <label>Slide n / N</label>
+        <div style="display:flex;gap:6px"><input data-test="n" type="number" min="1"><input data-test="N" type="number" min="1"></div>
+        <label>Thème</label><select data-test="theme" id="mTheme"></select>
+        <label>Pose</label><div id="mPoseG"></div>
+        <label>Sorcière</label><select data-test="sorc"><option value="auto">Auto</option><option value="oui">Oui</option><option value="non">Non</option></select>
+        <label>Position</label><select data-test="pos"><option value="auto">Auto</option><option value="droite">Droite</option><option value="gauche">Gauche</option><option value="centre">Centre</option></select>
+        <label>Fond</label><select data-test="fond"><option value="noir">Noir</option><option value="marine">Bleu marine</option><option value="degrade">Dégradé</option></select>
+        <label>Photo de fond</label><div id="mPhotoG"></div>
+        <label><input type="checkbox" data-test="dots" style="width:auto"> Points de progression</label>
+      </div>
+      <div class="dr"><div class="colD"><canvas id="mPrev"></canvas></div></div>
+    </div>
+    <div class="bande" id="mBib"></div>
+  </div>
+  <div id="pCar" style="flex:1;min-height:0;display:none;flex-direction:column">
+    <div class="bar">
+      <label>Carrousel<select id="cSel" style="min-width:260px"></select></label>
+      <label>Nouveau : structure<select id="cStruct"></select></label>
+      <label>Format<select id="cFormat"><option value="li-car">LinkedIn 1080 x 1080</option><option value="ig-car">Instagram 1080 x 1440</option></select></label>
+      <button class="btn" id="cNouveau">+ Créer le carrousel</button>
+      <button class="btn gris" id="cSupprimer">Supprimer ce carrousel</button>
+    </div>
+    <div class="split">
+      <div class="colG">
+        <label>Nom</label><input id="cNom">
+        <label>Thème (pose de la sorcière)</label><select id="cTheme"></select>
+        <label><input type="checkbox" id="cDots" style="width:auto"> Points de progression</label>
+        <h3>Slides</h3>
+        <div class="slides" id="cSlides"></div>
+        <button class="btn gris" id="cAjout">+ Ajouter une slide</button>
+        <h3>Slide sélectionnée</h3>
+        <label>Modèle</label><select id="sTpl"></select>
+        <label>Titre</label><textarea id="sTitre"></textarea>
+        <label>Mot à mettre en corail</label><input id="sAccent">
+        <label>Numéro géant (étape numérotée)</label><input id="sNum">
+        <label>Corps (une ligne = une puce)</label><textarea id="sCorps"></textarea>
+        <label>CTA</label><input id="sCta">
+        <label>URL</label><input id="sUrl">
+        <label>Photo de fond</label><div id="sPhotoG"></div>
+        <label>Pose</label><div id="sPoseG"></div>
+        <label>Sorcière</label><select id="sSorc"><option value="auto">Auto (1re et dernière slide)</option><option value="oui">Oui</option><option value="non">Non</option></select>
+        <label>Position</label><select id="sPos"><option value="auto">Auto</option><option value="droite">Droite</option><option value="gauche">Gauche</option><option value="centre">Centre</option></select>
+      </div>
+      <div class="dr"><div class="colD">
+        <canvas id="cPrev"></canvas>
+        <div class="hint" id="cInfo"></div>
+      </div></div>
+    </div>
+    <div class="bande" id="cBib"></div>
+  </div>
+</section>
+
+<!-- ============ EXPORT ============ -->
+<section class="tab" id="t-telecharger">
+  <div class="bar">
+    <label id="dCarL">Carrousel<select id="dCar" style="min-width:220px"></select></label>
+    <div id="xNav" style="display:flex;gap:8px;align-items:center">
+      <button class="btn gris" id="xPrec">←</button>
+      <span class="hint" id="xPos"></span>
+      <button class="btn gris" id="xSuiv">→</button>
+    </div>
+    <button class="btn" id="xPng">Télécharger PNG</button>
+    <button class="btn gris" id="dTout">Télécharger toutes les slides (ZIP)</button>
+    <button class="btn gris" id="xDrive" disabled title="Connexion via Claude requise">Envoyer vers Google Drive</button>
+    <span class="hint">Envoi Drive : connexion via Claude requise.</span>
+  </div>
+  <div class="colD" style="flex:1;min-height:0"><canvas id="xPrev"></canvas><div class="hint" id="xInfo"></div></div>
+</section>
+
+<div id="export"><canvas id="exp"></canvas></div>
+
+<script src="sorcieres.js"></script>
+<script src="charte.js"></script>
+<script src="photos.js"></script>
+<script src="modeles.js"></script>
+<script src="carrousels.js"></script>
+<script>
+const POSES = ["bras-croises","bureau-laptop","cape-au-vent","chuchotant-secret","debout-baguette","grimoire-lutrin","lisant-livre","outils-flottants","pensive-interrogations","pointant-direction","sablier-lumineux","sautant-joie","sort-puissant","telephone-main","victoire-confettis"];
+const THEMES = {
+  "organisation":"Organisation / process", "methode":"Méthode / étape par étape", "apprentissage":"Apprentissage / lecture",
+  "automatisation":"Automatisation / outils", "mindset":"Mindset / posture", "question":"Question / problème",
+  "temps":"Temps / urgence", "action":"Action / relance", "communication":"Communication / réseaux",
+  "invitation":"Invitation / CTA", "confidence":"Confidence / connexion", "resultat":"Résultat / victoire",
+  "magie":"Magie / solution", "offre":"Offre / appel fort", "defaut":"Sujet non listé"
+};
+const THEME_POSE = {
+  "organisation":"bureau-laptop", "methode":"grimoire-lutrin", "apprentissage":"lisant-livre",
+  "automatisation":"outils-flottants", "mindset":"bras-croises", "question":"pensive-interrogations",
+  "temps":"sablier-lumineux", "action":"cape-au-vent", "communication":"telephone-main",
+  "invitation":"pointant-direction", "confidence":"chuchotant-secret", "resultat":"sautant-joie",
+  "magie":"sort-puissant", "offre":"victoire-confettis", "defaut":"debout-baguette"
+};
+const FORMATS = {
+  "li-post":{w:1080,h:1080,fam:"post",story:false,li:true,car:false,label:"LinkedIn post"},
+  "li-car": {w:1080,h:1080,fam:"car", story:false,li:true,car:true,label:"LinkedIn carrousel"},
+  "ig-post":{w:1080,h:1440,fam:"post",story:false,li:false,car:false,label:"Instagram post"},
+  "ig-car": {w:1080,h:1440,fam:"car", story:false,li:false,car:true,label:"Instagram carrousel"},
+  "story":  {w:1080,h:1920,fam:"story",story:true,li:false,car:false,label:"Story"}
+};
+const BUT_LABEL = {tofu:"TOFU · attirer", mofu:"MOFU · confiance", bofu:"BOFU · vendre"};
+const KEY = 'studio-assist-v3';
+const $ = id => document.getElementById(id);
+const clone = o => JSON.parse(JSON.stringify(o));
+
+// ---------- Etat (sauvegardé dans le navigateur) ----------
+const DEFAUT = {
+  charte: clone(window.CHARTE),
+  carrousels: clone(window.CARROUSELS),
+  photoMeta: {},
+  test: {titre:"Tes relances, tu les notes où ?", accent:"relances", num:"1", corps:"Une seule liste\nUne date pour chacune", cle:"", cta:"Réserve ton appel gratuit", url:"", n:1, N:5, theme:"organisation", pose:"auto", sorc:"auto", pos:"auto", fond:"noir", photo:"", dots:true},
+  testTpl: "post-tofu-a", cSel: 0, cSlide: 0,
+  sorcieres: clone(window.SORCIERES)
+};
+let S;
+try { S = JSON.parse(localStorage.getItem(KEY)); } catch(e) { S = null; }
+if (!S || !S.charte) S = clone(DEFAUT);
+for (const k in DEFAUT) if (S[k] === undefined) S[k] = clone(DEFAUT[k]);
+S.test = Object.assign({}, DEFAUT.test, S.test);
+// Met à jour les poses déjà sauvegardées avec les fichiers (bbox, chemin) ; garde les poses ajoutées
+S.sorcieres = S.sorcieres.filter(x => x.src.startsWith('blob:') || window.SORCIERES.some(y => y.id === x.id)).map(x => { const d = window.SORCIERES.find(y => y.id === x.id); return d ? Object.assign({}, x, {bbox: d.bbox, src: d.src, label: d.label, theme: d.theme}) : x; });
+// Ajoute les poses du fichier sorcieres.js absentes de la sauvegarde
+window.SORCIERES.forEach(d => { if (!S.sorcieres.some(x => x.id === d.id)) S.sorcieres.push(clone(d)); });
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} }
+function telecharger(nom, texte, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([texte], {type: type || 'text/javascript'}));
+  a.download = nom; a.click();
+}
+
+// Photos : données + méta modifiées, plus photos ajoutées dans la session
+let PHOTOS = window.PHOTOS.map(p => Object.assign({}, p, S.photoMeta[p.id] || {}));
+const pimgs = {};
+function photoImg(id) {
+  const p = PHOTOS.find(x => x.id === id);
+  if (!p) return null;
+  if (!pimgs[p.src]) { const im = new Image(); im.onload = rendreTout; im.src = p.src; pimgs[p.src] = im; }
+  return pimgs[p.src];
+}
+// Poses
+const imgs = {};
+function poseImg(id) {
+  const s = S.sorcieres.find(x => x.id === id) || S.sorcieres.find(x => x.id === 'debout-baguette');
+  if (!s) return new Image();
+  if (!imgs[s.src]) { const im = new Image(); im.onload = rendreTout; im.src = s.src; imgs[s.src] = im; }
+  return imgs[s.src];
+}
+function poseAuto(theme) {
+  const s = S.sorcieres.find(x => x.theme === theme);
+  return s ? s.id : 'debout-baguette';
+}
+
+// ---------- Rendu ----------
+let ctx = null;
+const C = () => S.charte.couleurs;
+const fontOf = (s, w, fam) => `${w} ${Math.round(s)}px ${fam === 'titre' ? '"' + S.charte.polices.titre + '", sans-serif' : '"' + S.charte.polices.corps + '", sans-serif'}`;
+const words = t => t.split(/\s+/).filter(Boolean);
+const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
+const lineWidth = ln => ctx.measureText(ln.join(' ')).width;
+const BR_T = '\u0000BR';
+// Titre : après un « : », la suite passe à la ligne
+function wordsT(t) { const out = []; words(t).forEach(w => { out.push(w); if (/:$/.test(w)) out.push(BR_T); }); return out; }
+function wrapWords(ws, maxW) {
+  const lines = []; let cur = [];
+  for (const w of ws) {
+    if (w === BR_T) { if (cur.length) lines.push(cur); cur = []; continue; }
+    if (cur.length && ctx.measureText([...cur, w].join(' ')).width > maxW) { lines.push(cur); cur = [w]; }
+    else cur.push(w);
+  }
+  if (cur.length) lines.push(cur);
+  return lines;
+}
+function drawWords(line, x, y, colorOf) {
+  let cx = x;
+  line.forEach(w => { ctx.fillStyle = colorOf(w); ctx.fillText(w, cx, y); cx += ctx.measureText(w + ' ').width; });
+}
+const colorTitre = acc => { const a = norm(acc || ''); return w => (a && norm(w).includes(a)) ? C().corail : C().blanc; };
+function bloc(text, o) {
+  ctx.font = fontOf(o.size, 700, 'titre');
+  const lines = wrapWords(wordsT(text), o.maxW);
+  if (o.draw !== false) lines.forEach((ln, i) => {
+    ctx.font = fontOf(o.size, 700, 'titre');
+    const sx = o.align === 'center' ? o.x + (o.maxW - lineWidth(ln)) / 2 : o.x;
+    drawWords(ln, sx, o.y + i * o.lh, o.color);
+  });
+  return lines.length * o.lh;
+}
+function puces(texte, o) {
+  const draw = o.draw !== false, center = o.align === 'center';
+  const items = texte.split('\n').map(s => s.trim()).filter(Boolean);
+  const gap = o.size * 0.6;
+  let yy = o.y;
+  items.forEach(t => {
+    const hi = !!o.hi && /€/.test(t); // ligne de prix : plus grosse, en corail (modèles BOFU)
+    const sz = hi ? o.size * 1.25 : o.size;
+    const ind = center ? 0 : sz * 0.9, lh = sz * 1.35;
+    ctx.font = fontOf(sz, hi ? 700 : 400, 'corps');
+    const lines = wrapWords(words(t), o.maxW - ind);
+    if (draw && !center && !hi) { ctx.font = fontOf(o.size, 700, 'corps'); ctx.fillStyle = C().lime; ctx.fillText('–', o.x, yy); }
+    if (draw) lines.forEach((ln, i) => {
+      ctx.font = fontOf(sz, hi ? 700 : 400, 'corps');
+      const sx = center ? o.x + (o.maxW - lineWidth(ln)) / 2 : o.x + ind;
+      drawWords(ln, sx, yy + i * lh, () => hi ? C().corail : C().blanc);
+    });
+    yy += lines.length * lh + gap;
+  });
+  return yy - o.y;
+}
+function bouton(text, o) {
+  const s = o.size, pad = s * 0.9, h = s * 1.9;
+  ctx.font = fontOf(s, 700, 'corps');
+  const w = ctx.measureText(text).width + pad * 2;
+  const x = o.left ? o.x : o.x + (o.maxW - w) / 2; // bouton aligné à gauche : reste dans la colonne de texte
+  ctx.fillStyle = C().corail;
+  ctx.beginPath(); ctx.roundRect(x, o.y, w, h, 14); ctx.fill();
+  ctx.fillStyle = C().blanc; ctx.fillText(text, x + pad, o.y + (h - s) / 2 - s * 0.05);
+}
+
+// c : {titre, accent, corps, cle, cta, url, theme, pose, sorc, pos, fond, photo (id), n, N, dots}
+// tpl : modèle ; fmtKey : format ; el : canvas de destination
+function dessiner(el, tpl, fmtKey, c) {
+  const prev = ctx;
+  ctx = el.getContext('2d');
+  const fmt = FORMATS[fmtKey], p = tpl.p, W = fmt.w, H = fmt.h, story = fmt.story, fam = fmt.fam;
+  el.width = W; el.height = H;
+  ctx.textBaseline = 'top'; ctx.textAlign = 'left'; ctx.globalAlpha = 1;
+  const cl = C();
+
+  // Fond : photo (overlay 60 %) ou couleur
+  const ph = c.photo ? photoImg(c.photo) : null;
+  if (p.photoT) {
+    // photo en haut (pleine largeur, 56 % de la hauteur), fondue dans la couleur du fond en bas de la photo
+    const bgc = c.fond === 'marine' ? cl.marine : cl.noir;
+    ctx.fillStyle = bgc; ctx.fillRect(0, 0, W, H);
+    if (ph && ph.complete && ph.naturalWidth) {
+      const phH = H * 0.56, k = Math.max(W / ph.naturalWidth, phH / ph.naturalHeight);
+      const sw = W / k, sh = phH / k, sx = (ph.naturalWidth - sw) / 2, sy = 0; // recadrage haut : la tête reste visible
+      ctx.drawImage(ph, sx, sy, sw, sh, 0, 0, W, phH);
+      const g = ctx.createLinearGradient(0, phH * 0.5, 0, phH); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, bgc);
+      ctx.fillStyle = g; ctx.fillRect(0, phH * 0.5, W, phH * 0.5 + 1);
+    }
+  } else if (p.photoL) {
+    // photo à gauche, cadrée sur 60 % de la largeur, fondue dans la couleur du fond à droite (le texte est à droite)
+    const bgc = c.fond === 'marine' ? cl.marine : cl.noir;
+    ctx.fillStyle = bgc; ctx.fillRect(0, 0, W, H);
+    if (ph && ph.complete && ph.naturalWidth) {
+      const pwL = W * 0.6, k = Math.max(pwL / ph.naturalWidth, H / ph.naturalHeight);
+      const sw = pwL / k, sh = H / k, sx = (ph.naturalWidth - sw) / 2, sy = (ph.naturalHeight - sh) / 2;
+      ctx.drawImage(ph, sx, sy, sw, sh, 0, 0, pwL, H);
+      const v = ctx.createLinearGradient(W * 0.25, 0, pwL, 0);
+      v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, bgc);
+      ctx.fillStyle = v; ctx.fillRect(W * 0.25, 0, pwL - W * 0.25 + 1, H);
+    }
+  } else if (ph && ph.complete && ph.naturalWidth) {
+    const k = Math.max(W / ph.naturalWidth, H / ph.naturalHeight);
+    const pw = ph.naturalWidth * k, phh = ph.naturalHeight * k;
+    ctx.drawImage(ph, (W - pw) / 2, (H - phh) / 2, pw, phh);
+    ctx.fillStyle = 'rgba(18,18,18,0.6)'; ctx.fillRect(0, 0, W, H);
+  } else if (c.fond === 'degrade') {
+    const g = ctx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, cl.noir); g.addColorStop(1, cl.marine); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  } else { ctx.fillStyle = c.fond === 'marine' ? cl.marine : cl.noir; ctx.fillRect(0, 0, W, H); }
+
+  const n = +c.n || 1, N = +c.N || 1;
+  const barY = story ? 170 : 0;
+  if (p.bar) { ctx.fillStyle = cl.corail; ctx.fillRect(0, barY, W, 8); }
+
+  // Sorcière : géométrie calculée avant le texte, pour que le texte s'arrête avant elle
+  const pos = c.pos === 'auto' || !c.pos ? (p.pos || 'droite') : c.pos;
+  const autoOK = fam !== 'car' || n === 1 || n === N;
+  const sorcOn = c.sorc === 'oui' || (!!p.sorc && c.sorc !== 'non' && autoOK);
+  const barreY = H - (story ? 270 : 50) - (story ? 0 : 60);
+  let pileFin = null; // bas du texte empilé, pour placer « Swipe → » juste dessous
+  let geo = null;
+  if (sorcOn) {
+    const pid = c.pose === 'auto' || !c.pose ? poseAuto(c.theme) : c.pose;
+    const im = poseImg(pid);
+    if (im.complete && im.naturalWidth) {
+      const b = (S.sorcieres.find(x => x.id === pid) || {}).bbox || [0, 0, im.naturalWidth, im.naturalHeight];
+      const bw = b[2] - b[0], bh = b[3] - b[1];
+      // Même hauteur pour tous les modèles d'une famille, coin bas droit
+      const base = story ? 0.42 : (pos === 'centre' ? 0.42 : 0.56);
+      let dh = Math.min(base * H * (pos === 'droite' ? 1.25 : 1), H * 0.8), dw = dh * bw / bh;
+      if (dw > W * 0.6) { dh *= (W * 0.6) / dw; dw = W * 0.6; }
+      // Sorcière à droite : elle ne doit pas prendre toute la colonne de texte
+      const capD = fmtKey === 'ig-post' ? 0.56 : 0.46; // post Instagram (1080x1440) : sorcière plus grande
+      if (pos === 'droite' && dw > W * capD) { dh *= (W * capD) / dw; dw = W * capD; }
+      // Sorcière à gauche : largeur réduite pour garder un vrai bloc de texte à droite
+      if (pos === 'gauche' && dw > W * 0.4) { dh *= (W * 0.4) / dw; dw = W * 0.4; }
+      const dx = pos === 'droite' ? W - dw + 10 : pos === 'gauche' ? 30 : (W - dw) / 2;
+      const bas = pos === 'droite' && !story ? H - 30 : barreY;
+      geo = { im, b, bw, bh, dx, dy: bas - dh, dw, dh };
+      if (pos === 'droite') ctx.drawImage(im, b[0], b[1], bw, bh, dx, bas - dh, dw, dh);
+      else ctx.drawImage(im, b[0], b[1], bw, bh, dx, bas - dh, dw, dh);
+    }
+  }
+
+  // Zone de texte (sorcière à gauche ou à droite : texte sur l'autre côté)
+  let tx = 0.07, tw = 0.86;
+  if (p.photoL) { tx = 0.52; tw = 0.43; }
+  if (p.photoT) { tx = 0.07; tw = 0.86; }
+  if (geo && pos === 'droite') tw = Math.max(0.4, (geo.dx - 50) / W - tx);
+  if (geo && pos === 'gauche') { tx = Math.min(0.9, (geo.dx + geo.dw + 40) / W); tw = 0.9 - tx; }
+  if (p.tX != null) tx = p.tX;
+  if (p.tW != null) tw = p.tW;
+  const X = tx * W, MW = tw * W;
+  const colT = p.tCol === 'corail' ? (() => cl.corail) : colorTitre(c.accent);
+  let titreTxt = p.tTxt === 'cta' ? (c.cta || '') : (c.titre || '');
+  if (p.tUp) titreTxt = titreTxt.toUpperCase();
+  const corps = c.corps || '';
+
+  if (p.repost) {
+    // Repartage : texte seulement dans les 20 % du haut
+    if (titreTxt.trim()) bloc(titreTxt, { x: X, y: p.tY * H, maxW: MW, size: p.tS * W, lh: p.tS * W * 1.02, align: p.tA || 'left', color: colT });
+  } else if (!p.sticker) {
+    // Pile de blocs centrée (ou ancrée) dans la zone libre : pas de vide imposé
+    const zTop = story ? 200 : p.photoT ? Math.round(H * 0.6) : 90, zBot = H - (story ? 300 : 120), gap = W * 0.045;
+    const pile = [];
+    if (p.num && (c.num || '').trim()) {
+      const t = c.num.trim(), sz = p.nS * W;
+      pile.push({ h: sz * 0.95, fn: yy => { ctx.font = fontOf(sz, 700, 'titre'); ctx.fillStyle = cl.corail; ctx.fillText(t, X, yy); } });
+    }
+    if (p.key && (c.cle || '').trim()) {
+      const t = c.cle.trim(), sz = p.kS * W;
+      pile.push({ h: sz * 1.15, fn: yy => { ctx.font = `400 ${Math.round(sz)}px "${S.charte.polices.accent}", cursive`; ctx.fillStyle = cl.corail; ctx.fillText(t, (W - ctx.measureText(t).width) / 2, yy); } });
+    }
+    // Taille du corps : elle peut se réduire pour laisser sa place au titre (voir bloc titre)
+    let bodyPx = (p.bS || 0.042) * W, bodyPx0 = bodyPx;
+    if (p.tY != null && titreTxt.trim()) {
+      // Titre trop long : on réduit la taille jusqu'à ce qu'il tienne dans sa part de la zone (le reste reste lisible)
+      const gapZ = W * 0.045, alZ = p.tA || 'left';
+      const ctaH = (p.cta && (c.cta || '').trim()) ? W * (p.ctaBig ? 0.055 : 0.04) * 1.9 + gapZ : 0;
+      const corpsHOf = (b) => corps.trim() && p.bS ? puces(corps, { x: X, y: 0, maxW: MW, size: b, align: alZ, draw: false, hi: !!p.prix }) + gapZ : 0;
+      const hauteurTitre = (s0) => { ctx.font = fontOf(s0, 700, 'titre'); return wrapWords(wordsT(titreTxt), MW).length * s0 * 1.02; };
+      // Le titre passe avant le corps : le corps se réduit (jusqu'à 70 %) avant que le titre ne rétrécisse
+      while (bodyPx > bodyPx0 * 0.7 && corpsHOf(bodyPx) + ctaH + hauteurTitre(p.tS * W) > (zBot - zTop)) bodyPx *= 0.97;
+      const corpsH = corpsHOf(bodyPx);
+      const maxTH = (zBot - zTop) - corpsH - ctaH - gapZ;
+      let sz = p.tS * W; const szMin = p.tS * W * 0.55;
+      // Au-delà de 5 lignes, le titre devient difficile à lire : on réduit aussi
+      const nbLignes = (s0) => { ctx.font = fontOf(s0, 700, 'titre'); return wrapWords(wordsT(titreTxt), MW).length; };
+      while (sz > szMin && (hauteurTitre(sz) > maxTH || nbLignes(sz) > 5)) sz *= 0.96;
+      const lh = sz * 1.02, al = p.tA || 'left';
+      const hNarrow = bloc(titreTxt, { x: X, y: 0, maxW: MW, size: sz, lh, align: al, color: colT, draw: false });
+      // Sorcière à droite : si le titre entier tient au-dessus de sa tête, il prend toute la largeur
+      let wide = false, hUse = hNarrow, tX = X, tMW = MW;
+      if (geo && pos === 'droite') {
+        const WW = W * 0.86;
+        const hWide = bloc(titreTxt, { x: 0, y: 0, maxW: WW, size: sz, lh, align: al, color: colT, draw: false });
+        const numH = pile.reduce((a, b) => a + b.h + gapZ, 0);
+        const totalWide = numH + hWide + corpsH + ctaH + gapZ;
+        const ancT = p.anc || 'milieu';
+        const yy0 = ancT === 'haut' ? zTop : ancT === 'bas' ? zBot - totalWide : zTop + (zBot - zTop - totalWide) / 2;
+        if (yy0 + hWide <= geo.dy - gapZ) { wide = true; hUse = hWide; tX = W * 0.07; tMW = WW; }
+      }
+      pile.push({ h: hUse, fn: yy => { if (p.tcard) { ctx.fillStyle = 'rgba(18,18,18,0.88)'; ctx.fillRect(tX - W * 0.04, yy - W * 0.04, tMW + W * 0.08, hUse + W * 0.08); } bloc(titreTxt, { x: tX, y: yy, maxW: tMW, size: sz, lh, align: al, color: colT }); } });
+    }
+    if (corps.trim() && p.bS) { // les modèles sans taille de corps (fermetures) n'affichent pas de liste
+      const bX = (p.bX != null ? p.bX : tx) * W, bW = (p.bW != null ? p.bW : tw) * W;
+      const bS = bodyPx, al = p.bA || 'left';
+      const ind = p.card ? 72 : p.trait ? 30 : 0;
+      const hiP = !!p.prix;
+      const prixSeul = !!(p.trait && hiP && !/\n/.test(corps.trim()));
+      const hc = prixSeul ? bS * 1.25 * 1.1 : puces(corps, { x: bX, y: 0, maxW: bW - ind, size: bS, align: al, draw: false, hi: hiP }) + ind;
+      pile.push({ h: hc, fn: yy => {
+        if (p.card) {
+          ctx.fillStyle = 'rgba(18,18,18,0.85)'; ctx.fillRect(bX, yy, bW, hc);
+          ctx.fillStyle = cl.lime; ctx.fillRect(bX, yy, 6, hc);
+          puces(corps, { x: bX + 36, y: yy + 36, maxW: bW - 72, size: bS, align: al, hi: hiP });
+        } else if (p.trait) {
+          // Liste sans fond : seulement un trait lime à gauche
+          ctx.fillStyle = p.traitCol === 'corail' ? cl.corail : cl.lime; ctx.fillRect(bX, yy, 6, hc);
+          // Prix seul sur une ligne : centré verticalement sur le trait
+          if (prixSeul) puces(corps, { x: bX + 30, y: yy + (hc - bS * 1.25) / 2 - bS * 0.1, maxW: bW - 30, size: bS, align: al, hi: hiP });
+          else puces(corps, { x: bX + 30, y: yy, maxW: bW - 30, size: bS, align: al, hi: hiP });
+        } else puces(corps, { x: bX, y: yy, maxW: bW, size: bS, align: al, hi: hiP });
+      } });
+    }
+    if (p.cta && (c.cta || '').trim()) {
+      // Bouton trop long pour la colonne : on réduit sa taille
+      let sz = W * (p.ctaBig ? 0.055 : 0.04); const sz0 = sz;
+      ctx.font = fontOf(sz, 700, 'corps');
+      while (sz > sz0 * 0.6 && ctx.measureText(c.cta.trim()).width + sz * 1.8 > MW) { sz *= 0.95; ctx.font = fontOf(sz, 700, 'corps'); }
+      const h = sz * 1.9;
+      pile.push({ h, fn: yy => bouton(c.cta.trim(), { x: X, maxW: MW, y: yy, size: sz, left: (p.tA || 'left') !== 'center' }) });
+    }
+    if (p.ctaTxt && (c.cta || '').trim()) {
+      // Texte CTA : il ne doit pas passer sous la sorcière (largeur limitée à la colonne de gauche)
+      let sz = W * (p.ctaBig ? 0.055 : 0.04); const sz0 = sz;
+      const maxCta = geo && pos === 'droite' ? geo.dx - X - 30 : MW;
+      ctx.font = fontOf(sz, 700, 'corps');
+      while (sz > sz0 * 0.6 && ctx.measureText(c.cta.trim()).width > maxCta) { sz *= 0.95; ctx.font = fontOf(sz, 700, 'corps'); }
+      pile.push({ h: sz * 1.2, fn: yy => { ctx.font = fontOf(sz, 700, 'corps'); ctx.fillStyle = cl.corail; ctx.fillText(c.cta.trim(), X, yy); } });
+    }
+    const total = pile.reduce((a, b) => a + b.h, 0) + gap * Math.max(0, pile.length - 1);
+    const anc = p.anc || 'milieu';
+    let yy = anc === 'haut' ? zTop : anc === 'bas' ? zBot - total : zTop + (zBot - zTop - total) / 2;
+    pile.forEach(b => { b.fn(yy); yy += b.h + gap; });
+    pileFin = yy - gap;
+  }
+
+  // Swipe
+  if (p.swipe) {
+    ctx.font = fontOf(W * 0.03, 700, 'corps'); ctx.fillStyle = cl.lime;
+    const ySwipe = pileFin != null ? Math.min(pileFin + W * 0.03, barreY - 50) : barreY - 80;
+    ctx.fillText('Swipe →', X, ySwipe);
+  }
+
+  // Carrousel : points et n/N
+  if (fam === 'car') {
+    if (c.dots) {
+      const r = 7, gap = 26, total = N * gap;
+      const cornerR = sorcOn && pos === 'droite';
+      const x0 = cornerR ? 80 : W / 2 - total / 2;
+      for (let i = 1; i <= N; i++) {
+        ctx.fillStyle = i === n ? cl.lime : '#666';
+        ctx.beginPath(); ctx.arc(x0 + (i - 0.5) * gap, barreY + 10, r, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    const cornerN = sorcOn && pos === 'droite';
+    ctx.textAlign = cornerN ? 'left' : 'right'; ctx.font = fontOf(22, 300, 'corps'); ctx.globalAlpha = 0.6;
+    ctx.fillText(`${n}/${N}`, cornerN ? 80 : W - 80, barreY + 26); ctx.globalAlpha = 1; ctx.textAlign = 'left';
+  }
+
+  // URL
+  if (p.url && (c.url || '').trim()) {
+    ctx.textAlign = 'center'; ctx.font = fontOf(W * 0.022, 300, 'corps');
+    ctx.fillText(c.url.trim(), W / 2, H - (story ? 320 : 100));
+    ctx.textAlign = 'left';
+  }
+
+  // Mention IA et signature (charte)
+  ctx.textAlign = 'right'; ctx.font = fontOf(W * 0.02, 300, 'corps');
+  ctx.fillText(S.charte.mentionIA, W - 40, story ? 160 : 40);
+  ctx.textAlign = 'center'; ctx.font = fontOf(W * 0.0135, 300, 'corps');
+  ctx.fillText(fmt.li ? S.charte.signature.li : S.charte.signature.ig, W / 2, H - (story ? 270 : 50));
+  ctx.textAlign = 'left';
+  ctx = prev;
+}
+
+function ajusterCss(el, maxW, maxH) {
+  const sc = Math.min(maxW / el.width, maxH / el.height, 1);
+  el.style.width = (el.width * sc) + 'px'; el.style.height = (el.height * sc) + 'px';
+}
+function trouverModele(id) { return MODELES.templates.find(t => t.id === id); }
+function photoSelect(sel, val) {
+  sel.innerHTML = '<option value="">Aucune</option>';
+  PHOTOS.forEach(p => { const o = document.createElement('option'); o.value = p.id; o.textContent = p.description; sel.appendChild(o); });
+  sel.value = val || '';
+}
+function selectOptions(sel, items, val) {
+  sel.innerHTML = '';
+  items.forEach(([v, l]) => { const o = document.createElement('option'); o.value = v; o.textContent = l; sel.appendChild(o); });
+  if (val !== undefined) sel.value = val;
+}
+
+// Grilles de choix (poses, photos)
+function grille(conteneur, items, val, onPick) {
+  conteneur.innerHTML = ''; conteneur.className = 'grille';
+  items.forEach(it => {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'gi' + (it.id === val ? ' on' : ''); b.title = it.label;
+    if (it.src) { const im = document.createElement('img'); im.src = it.src; b.appendChild(im); }
+    else { const t = document.createElement('span'); t.textContent = it.id === 'auto' ? 'Auto' : '∅'; t.style.height = '60px'; t.style.display = 'flex'; t.style.alignItems = 'center'; b.appendChild(t); }
+    const l = document.createElement('small'); l.textContent = it.label; b.appendChild(l);
+    b.addEventListener('click', () => onPick(it.id));
+    conteneur.appendChild(b);
+  });
+}
+function poseItems() { return [{id:'auto', label:'Auto (selon le thème)'}].concat(S.sorcieres.map(s => ({id:s.id, label:s.label, src:s.src}))); }
+// Sorcières proposées pour le test : Auto, la pose du thème choisi, et la pose déjà sélectionnée (pour ne pas la perdre)
+function poseItemsPertinentes() {
+  const duTheme = S.sorcieres.filter(x => x.theme === S.test.theme).map(x => x.id);
+  return poseItems().filter(it => it.id === 'auto' || duTheme.includes(it.id) || it.id === S.test.pose);
+}
+// Photos proposées : Aucune + les photos de l'usage du modèle (couverture et fond pour un modèle couverture, fond sinon)
+function photoItemsPertinentes() {
+  const T = trouverModele(S.testTpl), couv = !!T && T.type === 'couverture';
+  const usages = couv ? ['couverture', 'fond'] : ['fond'];
+  return photoItems().filter(it => it.id === '' || it.id === S.test.photo || PHOTOS.some(p => p.id === it.id && usages.includes(p.usage)));
+}
+function photoItems() { return [{id:'', label:'Aucune'}].concat(PHOTOS.map(p => ({id:p.id, label:p.description + ' (' + p.usage + ')', src:p.src}))); }
+
+// Bandeau de bibliothèque : sorcières et photos cliquables
+function bandeau(conteneur, groupes) {
+  conteneur.innerHTML = '';
+  groupes.forEach(g => {
+    const bloc = document.createElement('div'); bloc.className = 'gp';
+    const t = document.createElement('div'); t.className = 'grp-titre'; t.textContent = g.titre;
+    const rang = document.createElement('div'); rang.className = 'ligne';
+    rang.style.display = 'flex'; rang.style.gap = '6px';
+    g.items.forEach(it => {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'gi' + (it.id === g.val ? ' on' : ''); b.title = it.label;
+      if (it.src) { const im = document.createElement('img'); im.src = it.src; b.appendChild(im); }
+      else { const x = document.createElement('span'); x.textContent = it.id === 'auto' ? 'Auto' : '∅'; x.style.height = '60px'; x.style.display = 'flex'; x.style.alignItems = 'center'; b.appendChild(x); }
+      const l = document.createElement('small'); l.textContent = it.label; b.appendChild(l);
+      b.addEventListener('click', () => g.onPick(it.id));
+      rang.appendChild(b);
+    });
+    bloc.append(t, rang); conteneur.appendChild(bloc);
+  });
+}
+function rendreBib() {
+  $('mBib').innerHTML = ''; // sorcières et photos du test : un seul sélecteur, à gauche
+  const car = carActuel(), s = car && car.slides[S.cSlide];
+  if (!s) { $('cBib').innerHTML = ''; return; }
+  bandeau($('cBib'), [
+    {titre:'Sorcières (pose) · slide ' + (S.cSlide+1), items: poseItems(), val: s.pose, onPick: v => { s.pose = v; save(); rendreTout(); }},
+    {titre:'Photos (fond) · slide ' + (S.cSlide+1), items: photoItems(), val: s.photo, onPick: v => { s.photo = v; save(); rendreTout(); }}
+  ]);
+}
+
+// ---------- Onglet Ma charte ----------
+function rendreCharte() {
+  const cc = $('chCouleurs'); cc.innerHTML = '';
+  Object.keys(S.charte.couleurs).forEach(k => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:8px;align-items:center;margin:4px 0';
+    row.innerHTML = `<input type="color" value="${S.charte.couleurs[k]}" style="width:44px;height:30px;padding:0"><span style="width:70px;font-size:12px;color:#bbb">${k}</span><input value="${S.charte.couleurs[k]}" style="flex:1">`;
+    const [picker, txt] = row.querySelectorAll('input');
+    const maj = v => { S.charte.couleurs[k] = v; picker.value = v; txt.value = v; save(); rendreTout(); };
+    picker.addEventListener('input', e => maj(e.target.value));
+    txt.addEventListener('change', e => { if (/^#[0-9a-fA-F]{6}$/.test(e.target.value)) maj(e.target.value); });
+    cc.appendChild(row);
+  });
+  $('chTitre').value = S.charte.polices.titre; $('chCorps').value = S.charte.polices.corps;
+  $('chIA').value = S.charte.mentionIA; $('chSigLi').value = S.charte.signature.li; $('chSigIg').value = S.charte.signature.ig;
+  $('chSource').textContent = S.charte.source || '';
+  // aperçu des couleurs
+  const ap = $('chApercu'); ap.innerHTML = '';
+  ['noir','marine','corail','lime','blanc'].forEach(k => {
+    const d = document.createElement('div');
+    d.className = 'carte'; d.style.background = S.charte.couleurs[k]; d.style.minHeight = '70px'; d.style.color = k==='blanc'||k==='lime' ? '#111' : '#fff';
+    d.textContent = k + ' ' + S.charte.couleurs[k];
+    ap.appendChild(d);
+  });
+}
+$('chTitre').addEventListener('input', e => { S.charte.polices.titre = e.target.value; save(); rendreTout(); });
+$('chCorps').addEventListener('input', e => { S.charte.polices.corps = e.target.value; save(); rendreTout(); });
+$('chIA').addEventListener('input', e => { S.charte.mentionIA = e.target.value; save(); rendreTout(); });
+$('chSigLi').addEventListener('input', e => { S.charte.signature.li = e.target.value; save(); rendreTout(); });
+$('chSigIg').addEventListener('input', e => { S.charte.signature.ig = e.target.value; save(); rendreTout(); });
+$('chTelecharger').addEventListener('click', () => telecharger('charte.js', 'window.CHARTE = ' + JSON.stringify(S.charte, null, 2) + ';\n'));
+$('chReset').addEventListener('click', () => { S.charte = clone(window.CHARTE); save(); rendreCharte(); rendreTout(); });
+
+// ---------- Onglet Mes photos ----------
+function rendrePhotos() {
+  const g = $('pGrille'); g.innerHTML = '';
+  PHOTOS.forEach(p => {
+    const carte = document.createElement('div'); carte.className = 'carte';
+    carte.innerHTML = `<img src="${p.src}" alt=""><input value="${p.description.replace(/"/g,'&quot;')}"><select><option value="couverture">couverture</option><option value="contenu">contenu</option><option value="fond">fond</option></select>`;
+    const [desc, sel] = [carte.querySelector('input'), carte.querySelector('select')];
+    sel.value = p.usage;
+    desc.addEventListener('change', e => { p.description = e.target.value; S.photoMeta[p.id] = Object.assign({}, S.photoMeta[p.id] || {}, {description: p.description}); save(); });
+    sel.addEventListener('change', e => { p.usage = e.target.value; S.photoMeta[p.id] = Object.assign({}, S.photoMeta[p.id] || {}, {usage: p.usage}); save(); });
+    g.appendChild(carte);
+  });
+}
+$('pAjout').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  PHOTOS.push({ id: 'u' + Date.now(), src: URL.createObjectURL(f), description: f.name, usage: 'contenu' });
+  rendrePhotos(); rendreTout();
+});
+$('pTelecharger').addEventListener('click', () => {
+  const liste = PHOTOS.filter(p => !p.src.startsWith('blob:')).map(p => `  { id: ${JSON.stringify(p.id)}, src: ${JSON.stringify(p.src)}, description: ${JSON.stringify(p.description)}, usage: ${JSON.stringify(p.usage)} }`);
+  telecharger('photos.js', 'window.PHOTOS = [\n' + liste.join(',\n') + '\n];\n');
+});
+
+// ---------- Sorcières (dans Mes photos) ----------
+function rendreSorcieres() {
+  const g = $('sGrille'); g.innerHTML = '';
+  S.sorcieres.forEach(s => {
+    const carte = document.createElement('div'); carte.className = 'carte';
+    carte.innerHTML = `<img src="${s.src}" alt="" style="background:#222;object-fit:contain"><input value="${s.label.replace(/"/g,'&quot;')}"><select></select>`;
+    const lab = carte.querySelector('input'), sel = carte.querySelector('select');
+    selectOptions(sel, Object.keys(THEMES).map(k => [k, THEMES[k]]), s.theme);
+    lab.addEventListener('change', e => { s.label = e.target.value; save(); rendreTout(); });
+    sel.addEventListener('change', e => { s.theme = e.target.value; save(); rendreTout(); });
+    g.appendChild(carte);
+  });
+}
+$('sAjoutFile').addEventListener('change', e => {
+  const f = e.target.files[0]; if (!f) return;
+  S.sorcieres.push({ id: 'u' + Date.now(), src: URL.createObjectURL(f), label: f.name.replace(/\.png$/i, ''), theme: 'defaut' });
+  rendreTout();
+});
+$('sTelecharger').addEventListener('click', () => {
+  const liste = S.sorcieres.filter(s => !s.src.startsWith('blob:')).map(s => `  { id: ${JSON.stringify(s.id)}, src: ${JSON.stringify(s.src)}, label: ${JSON.stringify(s.label)}, theme: ${JSON.stringify(s.theme)} }`);
+  telecharger('sorcieres.js', 'window.SORCIERES = [\n' + liste.join(',\n') + '\n];\n');
+});
+
+// ---------- Onglet Mes modèles ----------
+function contenuTest() {
+  const t = S.test;
+  return {titre:t.titre, accent:t.accent, num:t.num, corps:t.corps, cle:t.cle, cta:t.cta, url:t.url, theme:t.theme, pose:t.pose, sorc:t.sorc, pos:t.pos, fond:t.fond, photo:t.photo, n:t.n, N:t.N, dots:t.dots};
+}
+// Un modèle sans champ fmt vaut pour tous les formats de sa famille ; fmt 'li' ou 'ig' le réserve à LinkedIn ou Instagram
+function tplOk(t, fmtKey) {
+  if (!t || !FORMATS[fmtKey] || t.fam !== FORMATS[fmtKey].fam) return false;
+  return !t.fmt || t.fmt === (fmtKey.indexOf('li') === 0 ? 'li' : 'ig');
+}
+// ---------- Onglet Galerie (contenu d'exemple fixe, sans filtre) ----------
+const GALERIE_TEST = {titre:"Ton titre ici", accent:"titre", num:"1", corps:"Une idée par ligne\nUne deuxième idée", cle:"Mot clé", cta:"Ton appel à l'action", url:"assistbyalicia.github.io", n:1, N:3, theme:"organisation", pose:"auto", sorc:"auto", pos:"auto", fond:"noir", photo:"", dots:true};
+const GALERIE_SECTIONS = [
+  {fmt:'li-post', titre:'LinkedIn · Posts'},
+  {fmt:'ig-post', titre:'Instagram · Posts'},
+  {fmt:'story', titre:'Stories'},
+  {fmt:'li-car', titre:'Carrousels LinkedIn'},
+  {fmt:'ig-car', titre:'Carrousels Instagram'}
+];
+function rendreGalerie() {
+  const g = $('gGrille'); g.innerHTML = '';
+  GALERIE_SECTIONS.forEach(sec => {
+    const grp = document.createElement('div'); grp.className = 'grp';
+    grp.innerHTML = `<div class="grp-titre">${sec.titre}</div>`;
+    const modeles = MODELES.templates.filter(t => tplOk(t, sec.fmt));
+    if (!modeles.length) { const v = document.createElement('div'); v.className = 'hint'; v.textContent = 'Aucun modèle pour ce format.'; grp.appendChild(v); g.appendChild(grp); return; }
+    const thumbs = document.createElement('div'); thumbs.className = 'thumbs'; thumbs.style.flexWrap = 'wrap';
+    modeles.forEach(T => {
+      const f = FORMATS[sec.fmt];
+      const tmp = document.createElement('canvas');
+      dessiner(tmp, T, sec.fmt, GALERIE_TEST);
+      const H_TH = 260, tw = Math.round(H_TH * f.w / f.h);
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'th';
+      const c = document.createElement('canvas'); c.width = tw * 2; c.height = H_TH * 2;
+      c.style.width = tw + 'px'; c.style.height = H_TH + 'px';
+      c.getContext('2d').drawImage(tmp, 0, 0, c.width, c.height);
+      const s = document.createElement('span'); s.style.width = tw + 'px';
+      const nom = document.createElement('b'); nom.textContent = T.label; nom.style.fontWeight = '700';
+      const etiq = document.createElement('small'); etiq.textContent = T.but.toUpperCase(); etiq.style.color = '#CAFF00';
+      s.append(nom, document.createElement('br'), etiq);
+      b.append(c, s);
+      b.addEventListener('click', () => { S.testTpl = T.id; S.fmt = sec.fmt; save(); document.querySelector('header .onglet[data-tab="modeles"]').click(); });
+      thumbs.appendChild(b);
+    });
+    grp.appendChild(thumbs); g.appendChild(grp);
+  });
+}
+
+// ---------- Onglet Paramètres ----------
+function rendreModeles() {
+  const fmtKey = S.fmt || 'li-post', estCar = FORMATS[fmtKey].fam === 'car';
+  $('mFormat').value = fmtKey;
+  $('pPost').style.display = estCar ? 'none' : 'flex';
+  $('pCar').style.display = estCar ? 'flex' : 'none';
+  if (estCar) { $('cFormat').value = fmtKey; return; }
+  const modeles = MODELES.templates.filter(t => tplOk(t, fmtKey));
+  let T = trouverModele(S.testTpl);
+  if (!tplOk(T, fmtKey)) T = modeles.find(t => t.but === 'tofu') || modeles[0];
+  if (!T) return;
+  S.testTpl = T.id;
+  selectOptions($('mModele'), modeles.map(t => [t.id, t.label]), T.id);
+  $('mModele').onchange = e => { S.testTpl = e.target.value; save(); rendreTout(); };
+  const cv = $('mPrev');
+  dessiner(cv, T, fmtKey, contenuTest());
+  // variantes de l'étape directement sous l'aperçu (A, B, C)
+  let sw = document.getElementById('mSwitch');
+  if (!sw) { sw = document.createElement('div'); sw.id = 'mSwitch'; sw.style.cssText = 'display:flex;gap:8px;justify-content:center;margin-top:8px'; cv.parentElement.appendChild(sw); }
+  sw.innerHTML = '';
+  const etape = S.etape || T.but;
+  const variantes = modeles.filter(t => t.but === etape);
+  if (variantes.length > 1) variantes.forEach(t => {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = t.label.split(' · ')[0]; b.title = t.label;
+    b.style.cssText = 'min-width:44px;padding:6px 10px' + (t.id === T.id ? ';outline:2px solid #CAFF00' : '');
+    b.addEventListener('click', () => { S.testTpl = t.id; save(); rendreTout(); });
+    sw.appendChild(b);
+  });
+  ajusterCss(cv, cv.parentElement.clientWidth - 32, cv.parentElement.clientHeight - 32 - (sw.offsetHeight || 0) - 8);
+}
+document.querySelectorAll('[data-test]').forEach(el => {
+  const k = el.dataset.test;
+  el.addEventListener('input', () => { S.test[k] = (el.type === 'number') ? +el.value : (el.type === 'checkbox' ? el.checked : el.value); save(); rendreTout(); });
+  el.addEventListener('change', () => { S.test[k] = (el.type === 'number') ? +el.value : (el.type === 'checkbox' ? el.checked : el.value); save(); rendreTout(); });
+});
+// Format choisi dans Galerie ou Paramètres : un seul état (S.fmt)
+function changerFormat(v) {
+  S.fmt = v;
+  if (!tplOk(trouverModele(S.testTpl), v)) { const d = MODELES.templates.find(x => tplOk(x, v) && x.but === 'tofu') || MODELES.templates.find(x => tplOk(x, v)); if (d) S.testTpl = d.id; }
+  if (FORMATS[v].fam === 'car') $('cFormat').value = v;
+  save(); rendreTout();
+}
+$('mFormat').addEventListener('change', e => changerFormat(e.target.value));
+$('mTheme').addEventListener('change', e => { S.test.theme = e.target.value; S.test.pose = 'auto'; save(); rendreTout(); });
+$('mTelecharger').addEventListener('click', () => {
+  const fmtKey = $('mFormat').value, T = trouverModele(S.testTpl);
+  const cv = document.createElement('canvas');
+  dessiner(cv, T, fmtKey, contenuTest());
+  telechargerCanvas(cv, `${fmtKey}_${T.id}.png`);
+});
+function telechargerCanvas(cv, nom) {
+  try {
+    cv.toBlob(b => {
+      if (!b) return alert(MSG_EXPORT);
+      const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = nom; a.click();
+    }, 'image/png');
+  } catch (e) { alert(MSG_EXPORT); }
+}
+const MSG_EXPORT = "Export bloqué par le navigateur (fichier ouvert depuis le disque). Lance un serveur local depuis le dossier AssistByAlicia : python3 -m http.server 8000, puis ouvre http://localhost:8000/Sorcière/studio/studio.html";
+
+// ---------- Onglet Mes carrousels ----------
+function carActuel() { return S.carrousels[S.cSel] || null; }
+function contenuSlide(car, i) {
+  const s = car.slides[i], N = car.slides.length;
+  return {titre:s.titre, accent:s.accent, num:s.num, corps:s.corps, cta:s.cta, url:s.url, photo:s.photo, cle:'', theme:car.theme, pose:s.pose, sorc:s.sorc, pos:s.pos, fond:'noir', n:i+1, N, dots:car.dots};
+}
+function rendreCarrousels() {
+  // liste des carrousels
+  selectOptions($('cSel'), S.carrousels.map((c, i) => [i, c.nom]), S.cSel);
+  selectOptions($('cStruct'), MODELES.structures.map(s => [s.id, s.label + ' (' + BUT_LABEL[s.but] + ')']));
+  selectOptions($('cTheme'), Object.keys(THEMES).map(k => [k, THEMES[k]]));
+  selectOptions($('dCar'), S.carrousels.map((c, i) => [i, c.nom]), S.cSel);
+  const car = carActuel();
+  if (!car) { $('cSlides').innerHTML = '<div class="vide">Aucun carrousel. Crée-en un avec la structure choisie en haut.</div>'; $('cPrev').getContext('2d').clearRect(0,0,1,1); return; }
+  $('cNom').value = car.nom; $('cTheme').value = car.theme; $('cDots').checked = !!car.dots;
+  $('cNom').onchange = () => { car.nom = $('cNom').value; save(); rendreTout(); };
+  $('cNom').oninput = () => { car.nom = $('cNom').value; save(); };
+  $('cTheme').onchange = () => { car.theme = $('cTheme').value; save(); rendreTout(); };
+  $('cDots').onchange = () => { car.dots = $('cDots').checked; save(); rendreTout(); };
+
+  // liste des slides
+  const liste = $('cSlides'); liste.innerHTML = '';
+  car.slides.forEach((s, i) => {
+    const d = document.createElement('div'); d.className = 'slide' + (i === S.cSlide ? ' on' : '');
+    d.innerHTML = `<span class="num">${i+1}</span><span class="rol">${s.role || 'slide'}</span><button data-a="haut">↑</button><button data-a="bas">↓</button><button data-a="sup">×</button>`;
+    d.addEventListener('click', e => {
+      const a = e.target.dataset.a;
+      if (a === 'haut' && i > 0) { [car.slides[i-1], car.slides[i]] = [car.slides[i], car.slides[i-1]]; S.cSlide = i - 1; }
+      else if (a === 'bas' && i < car.slides.length - 1) { [car.slides[i+1], car.slides[i]] = [car.slides[i], car.slides[i+1]]; S.cSlide = i + 1; }
+      else if (a === 'sup') { if (car.slides.length > 1) car.slides.splice(i, 1); S.cSlide = Math.max(0, Math.min(S.cSlide, car.slides.length - 1)); }
+      else S.cSlide = i;
+      save(); rendreTout();
+    });
+    liste.appendChild(d);
+  });
+  $('cAjout').onclick = () => {
+    const dernier = car.slides[car.slides.length - 1];
+    car.slides.push({role:'slide', tpl: dernier ? dernier.tpl : 'car-mofu-a', titre:'', accent:'', corps:'', cta:'', url:'', photo:'', pose:'auto', sorc:'auto', pos:'auto'});
+    S.cSlide = car.slides.length - 1; save(); rendreTout();
+  };
+
+  // formulaire de la slide
+  const s = car.slides[S.cSlide] || car.slides[0];
+  if (!s) return;
+  const fam = 'car';
+  selectOptions($('sTpl'), MODELES.templates.filter(t => t.fam === fam).map(t => [t.id, t.label]), s.tpl);
+  $('sTitre').value = s.titre; $('sAccent').value = s.accent; $('sNum').value = s.num || ''; $('sCorps').value = s.corps;
+  $('sCta').value = s.cta; $('sUrl').value = s.url;
+  grille($('sPhotoG'), photoItems(), s.photo, v => maj('photo', v));
+  grille($('sPoseG'), poseItems(), s.pose, v => maj('pose', v));
+  $('sSorc').value = s.sorc; $('sPos').value = s.pos;
+  const maj = (k, v) => { s[k] = v; save(); rendreTout(); };
+  $('sTpl').onchange = e => maj('tpl', e.target.value);
+  $('sTitre').oninput = e => maj('titre', e.target.value);
+  $('sAccent').oninput = e => maj('accent', e.target.value);
+  $('sNum').oninput = e => maj('num', e.target.value);
+  $('sCorps').oninput = e => maj('corps', e.target.value);
+  $('sCta').oninput = e => maj('cta', e.target.value);
+  $('sUrl').oninput = e => maj('url', e.target.value);
+  $('sSorc').onchange = e => maj('sorc', e.target.value);
+  $('sPos').onchange = e => maj('pos', e.target.value);
+
+  // aperçu
+  const i = car.slides.indexOf(s);
+  const cv = $('cPrev');
+  dessiner(cv, trouverModele(s.tpl), car.format, contenuSlide(car, i));
+  ajusterCss(cv, 620, 620);
+  $('cInfo').textContent = `Slide ${i+1}/${car.slides.length} · ${s.role} · ${FORMATS[car.format].label}`;
+}
+$('cSel').addEventListener('change', e => { S.cSel = +e.target.value; S.cSlide = 0; save(); rendreTout(); });
+$('cNouveau').addEventListener('click', () => {
+  const st = MODELES.structures.find(s => s.id === $('cStruct').value);
+  const fmt = $('cFormat').value;
+  const car = {id: 'c' + Date.now(), nom: 'Nouveau carrousel · ' + st.label, format: fmt, structure: st.id, theme: 'organisation', dots: true,
+    slides: st.slides.map(s => ({role: s.role, tpl: s.tpl, titre:'', accent:'', corps:'', cta:'', url:'', photo:'', pose:'auto', sorc:'auto', pos:'auto'}))};
+  S.carrousels.push(car); S.cSel = S.carrousels.length - 1; S.cSlide = 0; save(); rendreTout();
+});
+$('cSupprimer').addEventListener('click', () => {
+  if (S.carrousels.length <= 1) return alert('Garde au moins un carrousel.');
+  if (!confirm('Supprimer ce carrousel de l\'appli ? (le fichier carrousels.js n\'est pas modifié)')) return;
+  S.carrousels.splice(S.cSel, 1); S.cSel = 0; S.cSlide = 0; save(); rendreTout();
+});
+
+// ---------- Onglet Export ----------
+function slugCar(car) { return car.nom.replace(/[^a-zA-Z0-9]+/g, '-').slice(0, 40); }
+// Dessine ce qui s'exporte : la slide courante du carrousel, ou le visuel de test ; renvoie son nom de fichier
+function dessinerExport(cv) {
+  const fmtKey = S.fmt || 'li-post';
+  if (FORMATS[fmtKey].fam === 'car') {
+    const car = carActuel(); if (!car || !car.slides.length) return null;
+    const i = Math.min(S.cSlide, car.slides.length - 1);
+    dessiner(cv, trouverModele(car.slides[i].tpl), car.format, contenuSlide(car, i));
+    return { nom: slugCar(car) + '_' + String(i + 1).padStart(2, '0'), i, n: car.slides.length, label: FORMATS[car.format].label };
+  }
+  dessiner(cv, trouverModele(S.testTpl), fmtKey, contenuTest());
+  return { nom: fmtKey + '_' + S.testTpl, label: FORMATS[fmtKey].label };
+}
+function rendreExport() {
+  const estCar = FORMATS[S.fmt || 'li-post'].fam === 'car';
+  selectOptions($('dCar'), S.carrousels.map((c, i) => [i, c.nom]), S.cSel);
+  $('dCarL').style.display = estCar ? '' : 'none';
+  $('xNav').style.display = estCar ? 'flex' : 'none';
+  $('dTout').style.display = estCar ? '' : 'none';
+  const cv = $('xPrev');
+  const info = dessinerExport(cv);
+  if (!info) { $('xPos').textContent = ''; $('xInfo').textContent = 'Aucun carrousel. Crée-en un dans Paramètres.'; return; }
+  ajusterCss(cv, cv.parentElement.clientWidth - 32, cv.parentElement.clientHeight - 80);
+  $('xPos').textContent = info.n ? `Slide ${info.i + 1} / ${info.n}` : '';
+  $('xInfo').textContent = info.label;
+}
+$('dCar').addEventListener('change', e => { S.cSel = +e.target.value; S.cSlide = 0; save(); rendreTout(); });
+$('xPrec').addEventListener('click', () => { S.cSlide = Math.max(0, S.cSlide - 1); save(); rendreTout(); });
+$('xSuiv').addEventListener('click', () => { const car = carActuel(); if (car) S.cSlide = Math.min(car.slides.length - 1, S.cSlide + 1); save(); rendreTout(); });
+$('xPng').addEventListener('click', () => { const out = document.createElement('canvas'); const info = dessinerExport(out); if (info) telechargerCanvas(out, info.nom + '.png'); });
+function telechargerBlob(blob, nom) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nom; a.click(); }
+// Archive ZIP minimale (méthode STORE : les PNG sont déjà compressés)
+let CRC_TABLE = null;
+function crc32(octets) {
+  if (!CRC_TABLE) { CRC_TABLE = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; CRC_TABLE[n] = c >>> 0; } }
+  let crc = 0xFFFFFFFF;
+  for (let i = 0; i < octets.length; i++) crc = CRC_TABLE[(crc ^ octets[i]) & 255] ^ (crc >>> 8);
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+function faireZip(fichiers) {
+  const enc = new TextEncoder(), morceaux = [], centrale = [];
+  let decalage = 0;
+  fichiers.forEach(f => {
+    const nom = enc.encode(f.nom), crc = crc32(f.octets), taille = f.octets.length;
+    const en = new DataView(new ArrayBuffer(30));
+    en.setUint32(0, 0x04034b50, true); en.setUint16(4, 20, true); en.setUint16(6, 0x0800, true);
+    en.setUint16(12, 0x21, true); en.setUint32(14, crc, true); en.setUint32(18, taille, true); en.setUint32(22, taille, true); en.setUint16(26, nom.length, true);
+    morceaux.push(new Uint8Array(en.buffer), nom, f.octets);
+    const ce = new DataView(new ArrayBuffer(46));
+    ce.setUint32(0, 0x02014b50, true); ce.setUint16(4, 20, true); ce.setUint16(6, 20, true); ce.setUint16(8, 0x0800, true);
+    ce.setUint16(14, 0x21, true); ce.setUint32(16, crc, true); ce.setUint32(20, taille, true); ce.setUint32(24, taille, true);
+    ce.setUint16(28, nom.length, true); ce.setUint32(42, decalage, true);
+    centrale.push(new Uint8Array(ce.buffer), nom);
+    decalage += 30 + nom.length + taille;
+  });
+  const tailleCentrale = centrale.reduce((s, p) => s + p.length, 0);
+  const fin = new DataView(new ArrayBuffer(22));
+  fin.setUint32(0, 0x06054b50, true); fin.setUint16(8, fichiers.length, true); fin.setUint16(10, fichiers.length, true);
+  fin.setUint32(12, tailleCentrale, true); fin.setUint32(16, decalage, true);
+  return new Blob([...morceaux, ...centrale, new Uint8Array(fin.buffer)], {type: 'application/zip'});
+}
+$('dTout').addEventListener('click', async () => {
+  const car = carActuel(); if (!car) return;
+  const fichiers = [];
+  for (let i = 0; i < car.slides.length; i++) {
+    const out = document.createElement('canvas');
+    dessiner(out, trouverModele(car.slides[i].tpl), car.format, contenuSlide(car, i));
+    const blob = await new Promise(res => out.toBlob(res, 'image/png'));
+    if (!blob) return alert(MSG_EXPORT);
+    fichiers.push({ nom: slugCar(car) + '_' + String(i + 1).padStart(2, '0') + '.png', octets: new Uint8Array(await blob.arrayBuffer()) });
+  }
+  telechargerBlob(faireZip(fichiers), slugCar(car) + '.zip');
+});
+
+// ---------- Rendu global et navigation ----------
+function rendreTout() {
+  try { rendreTout2(); } catch (e) { console.error('Rendu :', e); }
+}
+function rendreTout2() {
+  if (document.body.classList.contains("export")) { const q = new URLSearchParams(location.search); const car = S.carrousels[+q.get("carrousel")], i = (+q.get("slide")) - 1; if (car && car.slides[i]) dessiner($("exp"), trouverModele(car.slides[i].tpl), car.format, contenuSlide(car, i)); return; }
+  // chaque bloc est isolé : une erreur dans un bloc ne bloque ni le thème ni les poses
+  const sur = (nom, f) => { try { f(); } catch (e) { console.error('Rendu ' + nom + ' :', e); } };
+  sur('formulaire', () => {
+    document.querySelectorAll('[data-test]').forEach(el => {
+      const k = el.dataset.test;
+      if (el.type === 'checkbox') el.checked = !!S.test[k]; else if (document.activeElement !== el) el.value = S.test[k];
+    });
+    selectOptions($('mTheme'), Object.keys(THEMES).map(k => [k, THEMES[k]]), S.test.theme);
+  });
+  sur('poses', () => grille($('mPoseG'), poseItemsPertinentes(), S.test.pose, v => { S.test.pose = v; save(); rendreTout(); }));
+  sur('photos', () => grille($('mPhotoG'), photoItemsPertinentes(), S.test.photo, v => { S.test.photo = v; save(); rendreTout(); }));
+  sur('charte', rendreCharte); sur('photos-onglet', rendrePhotos); sur('sorcieres', rendreSorcieres);
+  sur('galerie', rendreGalerie); sur('modeles', rendreModeles); sur('carrousels', rendreCarrousels);
+  sur('export', rendreExport); sur('bibliotheque', rendreBib);
+}
+document.querySelectorAll('header .onglet').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('header .onglet').forEach(x => x.classList.toggle('on', x === b));
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.id === 't-' + b.dataset.tab));
+  rendreTout();
+}));
+if (!S.fmt) S.fmt = 'li-post';
+// Lecteur d'URL : ?format=&modele=&titre=&corail=&corps=(lignes séparées par |)&cta=&theme=&fond=
+(function lirePrefill() {
+  const q = new URLSearchParams(location.search);
+  if (q.has('carrousel') && q.has('slide')) return;
+  if (!['format','modele','titre','corail','corps','cta','theme','fond'].some(k => q.has(k))) return;
+  if (q.has('format') && FORMATS[q.get('format')]) S.fmt = q.get('format');
+  if (q.has('modele')) S.testTpl = q.get('modele');
+  if (q.has('titre')) S.test.titre = q.get('titre');
+  if (q.has('corail')) S.test.accent = q.get('corail');
+  if (q.has('corps')) S.test.corps = q.get('corps').split('|').join('\n');
+  if (q.has('cta')) S.test.cta = q.get('cta');
+  if (q.has('theme') && THEMES[q.get('theme')]) S.test.theme = q.get('theme');
+  if (q.has('fond')) S.test.fond = q.get('fond');
+  save();
+  window.PREFILL = true;
+})();
+$('mPrev').style.display = 'block';
+
+// Mode export : ?carrousel=<index>&slide=<n> affiche une slide plein format, sans interface
+(function exportMode() {
+  const q = new URLSearchParams(location.search);
+  if (!q.has('carrousel') || !q.has('slide')) return;
+  const car = S.carrousels[+q.get('carrousel')], i = (+q.get('slide')) - 1;
+  if (!car || !car.slides[i]) return;
+  document.body.classList.add('export');
+  const cv = $('exp');
+  dessiner(cv, trouverModele(car.slides[i].tpl), car.format, contenuSlide(car, i));
+  cv.style.width = cv.width + 'px'; cv.style.height = cv.height + 'px';
+  window.EXPORT_PRET = true;
+})();
+
+if (!document.body.classList.contains('export')) {
+  rendreTout();
+  if (document.fonts) {
+    Promise.all([
+      document.fonts.load('700 40px "League Spartan"'),
+      document.fonts.load('300 40px Montserrat'),
+      document.fonts.load('400 40px Montserrat'),
+      document.fonts.load('700 40px Montserrat'),
+      document.fonts.load('400 40px Satisfy')
+    ]).then(rendreTout, rendreTout);
+  }
+} else if (document.fonts) {
+  Promise.all([document.fonts.load('700 40px "League Spartan"'), document.fonts.load('400 40px Montserrat'), document.fonts.load('700 40px Montserrat'), document.fonts.load('400 40px Satisfy')])
+    .then(() => { const car = S.carrousels[+new URLSearchParams(location.search).get('carrousel')]; const i = (+new URLSearchParams(location.search).get('slide')) - 1; dessiner($('exp'), trouverModele(car.slides[i].tpl), car.format, contenuSlide(car, i)); });
+}
+if (window.PREFILL) document.querySelector('header .onglet[data-tab="modeles"]').click();
+window.addEventListener('resize', () => { if (!document.body.classList.contains('export')) rendreTout(); });
+</script>
+</body>
+</html>
