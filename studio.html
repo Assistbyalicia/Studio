@@ -1029,10 +1029,37 @@ $('xSaveClientId').addEventListener('click', () => {
   gdHint('Client ID enregistré.');
 });
 
+function semaineISO(d) {
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
+  const debutAn = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  const semaine = Math.ceil(((t - debutAn) / 86400000 + 1) / 7);
+  return t.getUTCFullYear() + '-S' + String(semaine).padStart(2, '0');
+}
+
+async function trouverOuCreerDossier(token, nom, parentId) {
+  const auth = { Authorization: 'Bearer ' + token };
+  const q = `name='${nom.replace(/'/g, "\\'")}' and mimeType='application/vnd.google-apps.folder' and '${parentId}' in parents and trashed=false`;
+  const recherche = await fetch('https://www.googleapis.com/drive/v3/files?fields=files(id)&q=' + encodeURIComponent(q), { headers: auth });
+  if (recherche.ok) {
+    const { files } = await recherche.json();
+    if (files && files[0]) return files[0].id;
+  }
+  const creation = await fetch('https://www.googleapis.com/drive/v3/files?fields=id', {
+    method: 'POST',
+    headers: { ...auth, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: nom, mimeType: 'application/vnd.google-apps.folder', parents: [parentId] }),
+  });
+  return creation.ok ? (await creation.json()).id : null;
+}
+
 async function uploadDrive(token, blob, nom) {
-  const meta = JSON.stringify({ name: nom, mimeType: 'image/png' });
+  const racine = await trouverOuCreerDossier(token, 'visuels claude', 'root');
+  const dossierSemaine = racine && await trouverOuCreerDossier(token, semaineISO(new Date()), racine);
+  const meta = { name: nom, mimeType: 'image/png' };
+  if (dossierSemaine) meta.parents = [dossierSemaine];
   const body = new FormData();
-  body.append('metadata', new Blob([meta], { type: 'application/json' }));
+  body.append('metadata', new Blob([JSON.stringify(meta)], { type: 'application/json' }));
   body.append('file', blob, nom);
   const resp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
     method: 'POST',
